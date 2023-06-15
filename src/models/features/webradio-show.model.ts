@@ -5,6 +5,6 @@ export interface WebradioShow {
   miniature: string
   streamId: string
   podcastId?: string
-  status: number
+  status: -1 | 0 | 1 | 2
   date: string
 }

@@ -29,14 +29,7 @@ const options: swaggerJSDoc.OAS3Options = {
         }
       }
     },
-    tags: [
-      {
-        name: 'Auth'
-      },
-      {
-        name: 'Environnement'
-      }
-    ]
+    tags: [{ name: 'Auth' }, { name: 'Environnement' }, { name: 'Webradio' }]
   },
   apis: ['./src/routers/**/*.ts']
 }

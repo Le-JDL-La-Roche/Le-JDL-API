@@ -6,7 +6,7 @@ import { DBException } from '$responses/exceptions/db-exception.response'
 import { DefaultSuccess } from '$responses/success/default-success.response'
 
 class Env {
-  async getEnv(next: NextFunction) {
+  async getEnv(next: NextFunction): Promise<DataSuccess<{ visits: Visits; shows: Shows; videos: Videos; articles: Articles }>> {
     var visits: Visits = { total: 0, visits: [] }
     var shows: Shows = { total: 0, status: { draft: 0, live: 0, waiting: 0, podcast: 0 } }
     var videos: Videos = {
