@@ -8,6 +8,7 @@ import { WebradioShow } from '$models/features/webradio-show.model'
 import { IncomingHttpHeaders } from 'http'
 import nexter from '$utils/nexter'
 import { AuthService } from '$services/auth.service'
+import { RequestException } from '$responses/exceptions/request-exception.response'
 
 class Webradio {
   async getPublishedWebradioShows(next: NextFunction): Promise<DataSuccess<{ shows: WebradioShow[] }>> {
@@ -45,6 +46,155 @@ class Webradio {
 
     if (!auth.status) {
       next(auth.exception)
+      throw null
+    }
+
+    var webradioShows: WebradioShow[] = []
+
+    try {
+      webradioShows = await db.query<WebradioShow[]>('SELECT * FROM webradio_shows ORDER BY date DESC')
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    return new DataSuccess(200, SUCCESS, 'Success', { shows: webradioShows })
+  }
+
+  async getWebradioShow(headers: IncomingHttpHeaders, showId: number, next: NextFunction): Promise<DataSuccess<{ show: WebradioShow }>> {
+    var webradioShow: WebradioShow
+
+    try {
+      webradioShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE id = ?', +showId))[0]
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    if (!webradioShow || !webradioShow.id) {
+      next(new RequestException('Show not found'))
+      throw null
+    }
+
+    if (webradioShow.status != 0 && webradioShow.status != 2) {
+      const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+
+      if (!auth.status) {
+        next(auth.exception)
+        throw null
+      }
+    }
+
+    return new DataSuccess(200, SUCCESS, 'Success', { show: webradioShow })
+  }
+
+  async postWebradioShow(
+    headers: IncomingHttpHeaders,
+    body: WebradioShow,
+    file: Express.Multer.File | null,
+    next: NextFunction
+  ): Promise<DataSuccess<{ shows: WebradioShow[] }>> {
+    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+
+    if (!auth.status) {
+      next(auth.exception)
+      throw null
+    }
+
+    if (!body.title || !body.description || !file || !body.streamId || !body.date || !body.status) {
+      next(new RequestException('Missing parameters'))
+      throw null
+    }
+
+    if (+body.status != -1 && +body.status != 0 && +body.status != 1 && +body.status != 2) {
+      next(new RequestException('Invalid parameter'))
+      throw null
+    }
+
+    try {
+      await db.query('INSERT INTO webradio_shows (title, description, miniature, stream_id, podcast_id, date, status) VALUES (?, ?, ?, ?, ?, ?, ?)', [
+        body.title + '',
+        body.description + '',
+        file.filename + '',
+        body.streamId + '',
+        body.podcastId + '',
+        body.date + '',
+        +body.status
+      ])
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    var webradioShows: WebradioShow[] = []
+
+    try {
+      webradioShows = await db.query<WebradioShow[]>('SELECT * FROM webradio_shows ORDER BY date DESC')
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    return new DataSuccess(200, SUCCESS, 'Success', { shows: webradioShows })
+  }
+
+  // edit a show
+  async putWebradioShow(
+    headers: IncomingHttpHeaders,
+    showId: number,
+    body: WebradioShow,
+    file: Express.Multer.File | null,
+    next: NextFunction
+  ): Promise<DataSuccess<{ shows: WebradioShow[] }>> {
+    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+
+    if (!auth.status) {
+      next(auth.exception)
+      throw null
+    }
+
+    var webradioShow: WebradioShow
+
+    try {
+      webradioShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE id = ?', +showId))[0]
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    if (!webradioShow || !webradioShow.id) {
+      next(new RequestException('Show not found'))
+      throw null
+    }
+
+    if (body.status != null && body.status != undefined && +body.status != -1 && +body.status != 0 && +body.status != 1 && +body.status != 2) {
+      next(new RequestException('Invalid parameter'))
+      throw null
+    }
+
+    webradioShow = {
+      title: body.title ? body.title + '' : webradioShow.title,
+      description: body.description ? body.description + '' : webradioShow.description,
+      miniature: file ? file.filename + '' : webradioShow.miniature,
+      streamId: body.streamId ? body.streamId + '' : webradioShow.streamId,
+      podcastId: body.podcastId ? body.podcastId + '' : webradioShow.podcastId,
+      date: body.date ? body.date + '' : webradioShow.date,
+      status: body.status ? (+body.status as -1 | 0 | 1 | 2) : (+webradioShow.status as -1 | 0 | 1 | 2)
+    }
+
+    try {
+      await db.query('UPDATE webradio_shows SET title = ?, description = ?, miniature = ?, stream_id = ?, podcast_id = ?, date = ?, status = ? WHERE id = ?', [
+        webradioShow.title,
+        webradioShow.description,
+        webradioShow.miniature,
+        webradioShow.streamId,
+        webradioShow.podcastId,
+        webradioShow.date,
+        webradioShow.status,
+        showId
+      ])
+    } catch (error) {
+      next(new DBException(undefined, error))
       throw null
     }
 
