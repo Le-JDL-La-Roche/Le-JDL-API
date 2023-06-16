@@ -112,7 +112,7 @@ export default class Webradio {
     }
 
     try {
-      await db.query('INSERT INTO webradio_shows (title, description, miniature, stream_id, podcast_id, date, status) VALUES (?, ?, ?, ?, ?, ?, ?)', [
+      await db.query('INSERT INTO webradio_shows (title, description, thumbnail, stream_id, podcast_id, date, status) VALUES (?, ?, ?, ?, ?, ?, ?)', [
         body.title + '',
         body.description + '',
         file.filename + '',
@@ -174,7 +174,7 @@ export default class Webradio {
     webradioShow = {
       title: body.title ? body.title + '' : webradioShow.title,
       description: body.description ? body.description + '' : webradioShow.description,
-      miniature: file ? file.filename + '' : webradioShow.miniature,
+      thumbnail: file ? file.filename + '' : webradioShow.thumbnail,
       streamId: body.streamId ? body.streamId + '' : webradioShow.streamId,
       podcastId: body.podcastId ? body.podcastId + '' : webradioShow.podcastId,
       date: body.date ? body.date + '' : webradioShow.date,
@@ -183,11 +183,11 @@ export default class Webradio {
 
     try {
       await db.query(
-        'UPDATE webradio_shows SET title = ?, description = ?, miniature = ?, stream_id = ?, podcast_id = ?, date = ?, status = ? WHERE id = ?',
+        'UPDATE webradio_shows SET title = ?, description = ?, thumbnail = ?, stream_id = ?, podcast_id = ?, date = ?, status = ? WHERE id = ?',
         [
           webradioShow.title,
           webradioShow.description,
-          webradioShow.miniature,
+          webradioShow.thumbnail,
           webradioShow.streamId,
           webradioShow.podcastId,
           webradioShow.date,

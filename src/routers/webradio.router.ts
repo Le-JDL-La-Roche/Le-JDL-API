@@ -139,7 +139,7 @@ export default class WebradioRouter implements Route {
      *                 type: integer
      *               date:
      *                 type: string
-     *               miniature:
+     *               thumbnail:
      *                 type: file
      *     responses:
      *       200:
@@ -147,7 +147,7 @@ export default class WebradioRouter implements Route {
      */
     this.router.post(
       `${this.path}/shows`,
-      new FilesService().uploadWebradioMiniature,
+      new FilesService().uploadWebradioThumbnail,
       async (req: Request<any>, res: Response<DataHttpResponse<{ shows: WebradioShow[] }>>, next: NextFunction) => {
         try {
           const resp = await new Webradio().postWebradioShow(req.headers, req.body, req.file || null, next)
@@ -188,7 +188,7 @@ export default class WebradioRouter implements Route {
      *                 type: integer
      *               date:
      *                 type: string
-     *               miniature:
+     *               thumbnail:
      *                 type: file
      *     responses:
      *       200:
@@ -196,7 +196,7 @@ export default class WebradioRouter implements Route {
      */
     this.router.put(
       `${this.path}/shows/:id`,
-      new FilesService().uploadWebradioMiniature,
+      new FilesService().uploadWebradioThumbnail,
       async (req: Request, res: Response<DataHttpResponse<{ shows: WebradioShow[] }>>, next: NextFunction) => {
         try {
           const resp = await new Webradio().putWebradioShow(req.headers, +req.params.id, req.body, req.file || null, next)

@@ -82,7 +82,7 @@ export default class VideosRouter implements Route {
      *                 type: string
      *               type:
      *                 type: string
-     *               miniature:
+     *               thumbnail:
      *                 type: file
      *     responses:
      *       200:
@@ -90,7 +90,7 @@ export default class VideosRouter implements Route {
      */
     this.router.post(
       `${this.path}`,
-      new FilesService().uploadVideoMiniature,
+      new FilesService().uploadVideoThumbnail,
       async (req: Request, res: Response<DataHttpResponse<{ videos: Video[] }>>, next: NextFunction) => {
         try {
           const resp = await new Videos().postVideo(req.headers, req.body, req.file || null, next)
@@ -125,7 +125,7 @@ export default class VideosRouter implements Route {
      *                 type: string
      *               type:
      *                 type: string
-     *               miniature:
+     *               thumbnail:
      *                 type: file
      *     responses:
      *       200:
@@ -133,7 +133,7 @@ export default class VideosRouter implements Route {
      */
     this.router.post(
       `${this.path}/:id`,
-      new FilesService().uploadVideoMiniature,
+      new FilesService().uploadVideoThumbnail,
       async (req: Request, res: Response<DataHttpResponse<{ videos: Video[] }>>, next: NextFunction) => {
         try {
           const resp = await new Videos().putVideo(req.headers, req.body, +req.params.id, req.file || null, next)

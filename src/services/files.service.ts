@@ -9,7 +9,7 @@ import { UnauthorizedException } from '$responses/exceptions/unauthorized-except
 
 export class FilesService {
   //! WEBRADIO
-  async uploadWebradioMiniature(req: Request, res: Response, next: NextFunction) {
+  async uploadWebradioThumbnail(req: Request, res: Response, next: NextFunction) {
     const webradio = multer.diskStorage({
       destination: (req, file, next) => {
         next(null, './public/images/posters/')
@@ -21,7 +21,7 @@ export class FilesService {
       }
     })
 
-    const upload = multer({ storage: webradio }).single('miniature')
+    const upload = multer({ storage: webradio }).single('thumbnail')
     const auth = nexter.serviceToException(await new AuthService().checkAuth(req.headers['authorization'] + '', 'Bearer'))
 
     if (!auth.status) {
@@ -40,7 +40,7 @@ export class FilesService {
   }
 
   //! VIDEO
-  async uploadVideoMiniature(req: Request, res: Response, next: NextFunction) {
+  async uploadVideoThumbnail(req: Request, res: Response, next: NextFunction) {
     const video = multer.diskStorage({
       destination: (req, file, next) => {
         next(null, './public/images/posters/')
@@ -52,7 +52,7 @@ export class FilesService {
       }
     })
 
-    const upload = multer({ storage: video }).single('miniature')
+    const upload = multer({ storage: video }).single('thumbnail')
     const auth = nexter.serviceToException(await new AuthService().checkAuth(req.headers['authorization'] + '', 'Bearer'))
 
     if (!auth.status) {
