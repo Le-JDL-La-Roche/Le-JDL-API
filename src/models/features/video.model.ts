@@ -5,6 +5,6 @@ export interface Video {
   miniature: string
   videoId: string
   type: 'youtube' | 'instagram'
-  category: 'news' | 'culture' | 'sport' | 'sciences' | 'tech' | 'laroche'
+  category: 'news' | 'culture' | 'sport' | 'science' | 'tech' | 'laroche'
   date: string
 }

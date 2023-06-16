@@ -10,6 +10,8 @@ import nexter from '$utils/nexter'
 import { AuthService } from '$services/auth.service'
 
 export default class Videos {
+  private readonly cat = ['news', 'culture', 'sport', 'science', 'tech', 'laroche']
+
   async getVideos(next: NextFunction): Promise<DataSuccess<{ videos: Video[] }>> {
     var videos: Video[] = []
 
@@ -59,9 +61,7 @@ export default class Videos {
       throw null
     }
 
-    const cat = ['news', 'culture', 'sport', 'science', 'tech', 'laroche']
-
-    if ((body.type != 'youtube' && body.type != 'instagram') || !cat.includes(body.category)) {
+    if ((body.type != 'youtube' && body.type != 'instagram') || !this.cat.includes(body.category)) {
       next(new RequestException('Invalid parameter'))
       throw null
     }
@@ -74,8 +74,120 @@ export default class Videos {
         body.videoId + '',
         body.type + '',
         body.category + '',
-        Date.now() / 1000
+        Math.round(Date.now() / 1000)
       ])
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    var videos: Video[] = []
+
+    try {
+      videos = await db.query<Video[]>('SELECT * FROM videos ORDER BY date DESC')
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    return new DataSuccess(200, SUCCESS, 'Success', { videos: videos })
+  }
+
+  async putVideo(
+    headers: IncomingHttpHeaders,
+    body: Video,
+    videoId: number,
+    file: Express.Multer.File | null,
+    next: NextFunction
+  ): Promise<DataSuccess<{ videos: Video[] }>> {
+    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+
+    if (!auth.status) {
+      next(auth.exception)
+      throw null
+    }
+
+    var video: Video
+
+    try {
+      video = (await db.query<Video[]>('SELECT * FROM videos WHERE id = ?', videoId))[0]
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    if (!video || !video.id) {
+      next(new RequestException('Video not found'))
+      throw null
+    }
+
+    if ((body.category != null && !this.cat.includes(body.category)) || (body.type != null && body.type != 'youtube' && body.type != 'instagram')) {
+      next(new RequestException('Invalid parameter'))
+      throw null
+    }
+
+    video = {
+      title: body.title ? body.title + '' : video.title,
+      description: body.description ? body.description + '' : video.description,
+      miniature: file ? file.filename + '' : video.miniature,
+      videoId: body.videoId ? body.videoId + '' : video.videoId,
+      type: body.type ? body.type : video.type,
+      category: body.category ? body.category : video.category,
+      date: body.date ? body.date : video.date
+    }
+
+    try {
+      await db.query('UPDATE videos SET title = ?, description = ?, miniature = ?, video_id = ?, type = ?, category = ?, date = ? WHERE id = ?', [
+        video.title,
+        video.description,
+        video.miniature,
+        video.videoId,
+        video.type,
+        video.category,
+        video.date,
+        videoId
+      ])
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    var videos: Video[] = []
+
+    try {
+      videos = await db.query<Video[]>('SELECT * FROM videos ORDER BY date DESC')
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    return new DataSuccess(200, SUCCESS, 'Success', { videos: videos })
+  }
+
+  async deleteVideo(headers: IncomingHttpHeaders, videoId: number, next: NextFunction): Promise<DataSuccess<{ videos: Video[] }>> {
+    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+
+    if (!auth.status) {
+      next(auth.exception)
+      throw null
+    }
+
+    var video: Video
+
+    try {
+      video = (await db.query<Video[]>('SELECT * FROM videos WHERE id = ?', videoId))[0]
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    if (!video || !video.id) {
+      next(new RequestException('Video not found'))
+      throw null
+    }
+
+    try {
+      await db.query('DELETE FROM videos WHERE id = ?', videoId)
     } catch (error) {
       next(new DBException(undefined, error))
       throw null

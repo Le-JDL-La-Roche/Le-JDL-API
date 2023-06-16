@@ -2,7 +2,7 @@ import Videos from '$controllers/video.controller'
 import { Video } from '$models/features/video.model'
 import { Route } from '$models/handle/route.model'
 import { DataHttpResponse } from '$models/responses/http/data-http-response.model'
-import {FilesService} from '$services/files.service'
+import { FilesService } from '$services/files.service'
 import { NextFunction, Router } from 'express'
 import { Request, Response } from 'express'
 import multer from 'multer'
@@ -86,7 +86,7 @@ export default class VideosRouter implements Route {
      *                 type: file
      *     responses:
      *       200:
-     *         description: Show posted
+     *         description: Video posted
      */
     this.router.post(
       `${this.path}`,
@@ -98,5 +98,72 @@ export default class VideosRouter implements Route {
         } catch (error) {}
       }
     )
+
+    /**
+     * @openapi
+     * /videos/{video_id}:
+     *   put:
+     *     tags:
+     *       - Videos
+     *     security:
+     *       - bearer: []
+     *     summary: Put a video by ID
+     *     requestBody:
+     *       required: false
+     *       content:
+     *         multipart/form-data:
+     *           schema:
+     *             type: object
+     *             properties:
+     *               title:
+     *                 type: string
+     *               description:
+     *                 type: string
+     *               videoId:
+     *                 type: string
+     *               category:
+     *                 type: string
+     *               type:
+     *                 type: string
+     *               miniature:
+     *                 type: file
+     *     responses:
+     *       200:
+     *         description: Video updated
+     */
+    this.router.post(
+      `${this.path}/:id`,
+      new FilesService().uploadVideoMiniature,
+      async (req: Request, res: Response<DataHttpResponse<{ videos: Video[] }>>, next: NextFunction) => {
+        try {
+          const resp = await new Videos().putVideo(req.headers, req.body, +req.params.id, req.file || null, next)
+          res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
+        } catch (error) {}
+      }
+    )
+
+    /**
+     * @openapi
+     * /videos/{video_id}:
+     *   delete:
+     *     tags:
+     *       - Videos
+     *     security:
+     *       - bearer: []
+     *     summary: Delete a video by ID
+     *     parameters:
+     *       - in: path
+     *         name: video_id
+     *         required: true
+     *     responses:
+     *       200:
+     *         description: Video deleted
+     */
+    this.router.delete(`${this.path}/:id`, async (req: Request, res: Response<DataHttpResponse<{ videos: Video[] }>>, next: NextFunction) => {
+      try {
+        const resp = await new Videos().deleteVideo(req.headers, +req.params.id, next)
+        res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
+      } catch (error) {}
+    })
   }
 }

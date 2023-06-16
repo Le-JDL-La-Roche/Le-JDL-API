@@ -178,7 +178,7 @@ export default class Webradio {
       streamId: body.streamId ? body.streamId + '' : webradioShow.streamId,
       podcastId: body.podcastId ? body.podcastId + '' : webradioShow.podcastId,
       date: body.date ? body.date + '' : webradioShow.date,
-      status: body.status ? (+body.status as -1 | 0 | 1 | 2) : (+webradioShow.status as -1 | 0 | 1 | 2)
+      status: body.status ? body.status : webradioShow.status
     }
 
     try {
