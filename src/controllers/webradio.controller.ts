@@ -11,7 +11,7 @@ class Webradio {
     var webradioShows: WebradioShow[] = []
 
     try {
-      webradioShows = await db.query('SELECT * FROM webradio_shows WHERE status = 2 ORDER BY date DESC')
+      webradioShows = await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = 2 ORDER BY date DESC')
     } catch (error) {
       next(new DBException(undefined, error))
       throw null
@@ -20,8 +20,21 @@ class Webradio {
     return new DataSuccess(200, SUCCESS, 'Success', { shows: webradioShows })
   }
 
-  async updateVisits(next: NextFunction): Promise<DefaultSuccess> {
-    return new DefaultSuccess(200, SUCCESS, 'Success')
+  async getCurrentWebradioShow(next: NextFunction): Promise<DataSuccess<{ show: WebradioShow } | null>> {
+    var webradioShow: WebradioShow
+
+    try {
+      webradioShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = 0 ORDER BY date DESC'))[0]
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    if (webradioShow && webradioShow.id) {
+      return new DataSuccess(200, SUCCESS, 'Success', { show: webradioShow })
+    } else {
+      return new DataSuccess(200, SUCCESS, 'No show', null)
+    }
   }
 }
 
