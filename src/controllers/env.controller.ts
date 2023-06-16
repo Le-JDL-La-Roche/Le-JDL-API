@@ -5,7 +5,7 @@ import { NextFunction } from 'express'
 import { DBException } from '$responses/exceptions/db-exception.response'
 import { DefaultSuccess } from '$responses/success/default-success.response'
 
-class Env {
+export default class Env {
   async getEnv(next: NextFunction): Promise<DataSuccess<{ visits: Visits; shows: Shows; videos: Videos; articles: Articles }>> {
     var visits: Visits = { total: 0, visits: [] }
     var shows: Shows = { total: 0, status: { draft: 0, live: 0, waiting: 0, podcast: 0 } }
@@ -134,8 +134,6 @@ class Env {
     return new DefaultSuccess(200, SUCCESS, 'Success')
   }
 }
-
-export default Env
 
 interface Visits {
   total: number

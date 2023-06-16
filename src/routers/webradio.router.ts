@@ -7,7 +7,7 @@ import { DefaultHttpResponse } from '$models/responses/http/default-http-respons
 import Webradio from '$controllers/webradio.controller'
 import { WebradioShow } from '$models/features/webradio-show.model'
 import multer from 'multer'
-import files from '$utils/files'
+import { FilesService } from '$services/files.service'
 import nexter from '$utils/nexter'
 import { AuthService } from '$services/auth.service'
 import { AUTH_ERROR, CLIENT_ERROR } from '$models/types'
@@ -99,20 +99,17 @@ export default class WebradioRouter implements Route {
      *         required: true
      *     security:
      *       - bearer: []
-     *     summary: Get all shows
+     *     summary: Get one show by ID
      *     responses:
      *       200:
      *         description: Shows
      */
-    this.router.get(
-      `${this.path}/shows/:show_id`,
-      async (req: Request<{ show_id: number }, {}, {}, {}>, res: Response<DataHttpResponse<{ show: WebradioShow }>>, next: NextFunction) => {
-        try {
-          const resp = await new Webradio().getWebradioShow(req.headers, req.params['show_id'], next)
-          res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
-        } catch (error) {}
-      }
-    )
+    this.router.get(`${this.path}/shows/:id`, async (req: Request, res: Response<DataHttpResponse<{ show: WebradioShow }>>, next: NextFunction) => {
+      try {
+        const resp = await new Webradio().getWebradioShow(req.headers, +req.params.id, next)
+        res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
+      } catch (error) {}
+    })
 
     /**
      * @openapi
@@ -150,8 +147,7 @@ export default class WebradioRouter implements Route {
      */
     this.router.post(
       `${this.path}/shows`,
-      this.checkToken,
-      multer({ storage: files.webradio }).single('miniature'),
+      new FilesService().uploadWebradioMiniature,
       async (req: Request<any>, res: Response<DataHttpResponse<{ shows: WebradioShow[] }>>, next: NextFunction) => {
         try {
           const resp = await new Webradio().postWebradioShow(req.headers, req.body, req.file || null, next)
@@ -168,7 +164,7 @@ export default class WebradioRouter implements Route {
      *       - Webradio
      *     security:
      *       - bearer: []
-     *     summary: Put a new show
+     *     summary: Put a show by ID
      *     parameters:
      *       - in: path
      *         name: show_id
@@ -196,28 +192,44 @@ export default class WebradioRouter implements Route {
      *                 type: file
      *     responses:
      *       200:
-     *         description: Show posted
+     *         description: Show updated
      */
     this.router.put(
-      `${this.path}/shows/:show_id`,
-      this.checkToken,
-      multer({ storage: files.webradio }).single('miniature'),
-      async (req: Request<any>, res: Response<DataHttpResponse<{ shows: WebradioShow[] }>>, next: NextFunction) => {
+      `${this.path}/shows/:id`,
+      new FilesService().uploadWebradioMiniature,
+      async (req: Request, res: Response<DataHttpResponse<{ shows: WebradioShow[] }>>, next: NextFunction) => {
         try {
-          const resp = await new Webradio().putWebradioShow(req.headers, req.params['show_id'], req.body, req.file || null, next)
+          const resp = await new Webradio().putWebradioShow(req.headers, +req.params.id, req.body, req.file || null, next)
           res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
         } catch (error) {}
       }
     )
-  }
 
-  private async checkToken(req: Request, res: Response<DefaultHttpResponse>, next: NextFunction) {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(req.headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      res.status(401).send({ code: AUTH_ERROR, message: 'Unauthorized' })
-    } else {
-      next()
-    }
+    /**
+     * @openapi
+     * /webradio/shows/{show_id}:
+     *   delete:
+     *     tags:
+     *       - Webradio
+     *     security:
+     *       - bearer: []
+     *     summary: Delete a show by ID
+     *     parameters:
+     *       - in: path
+     *         name: show_id
+     *         required: true
+     *     responses:
+     *       200:
+     *         description: Show deleted
+     */
+    this.router.delete(
+      `${this.path}/shows/:id`,
+      async (req: Request, res: Response<DataHttpResponse<{ shows: WebradioShow[] }>>, next: NextFunction) => {
+        try {
+          const resp = await new Webradio().deleteWebradioShow(req.headers, +req.params.id, next)
+          res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
+        } catch (error) {}
+      }
+    )
   }
 }

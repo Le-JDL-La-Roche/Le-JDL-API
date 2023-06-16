@@ -10,7 +10,7 @@ import nexter from '$utils/nexter'
 import { AuthService } from '$services/auth.service'
 import { RequestException } from '$responses/exceptions/request-exception.response'
 
-class Webradio {
+export default class Webradio {
   async getPublishedWebradioShows(next: NextFunction): Promise<DataSuccess<{ shows: WebradioShow[] }>> {
     var webradioShows: WebradioShow[] = []
 
@@ -138,7 +138,6 @@ class Webradio {
     return new DataSuccess(200, SUCCESS, 'Success', { shows: webradioShows })
   }
 
-  // edit a show
   async putWebradioShow(
     headers: IncomingHttpHeaders,
     showId: number,
@@ -183,16 +182,60 @@ class Webradio {
     }
 
     try {
-      await db.query('UPDATE webradio_shows SET title = ?, description = ?, miniature = ?, stream_id = ?, podcast_id = ?, date = ?, status = ? WHERE id = ?', [
-        webradioShow.title,
-        webradioShow.description,
-        webradioShow.miniature,
-        webradioShow.streamId,
-        webradioShow.podcastId,
-        webradioShow.date,
-        webradioShow.status,
-        showId
-      ])
+      await db.query(
+        'UPDATE webradio_shows SET title = ?, description = ?, miniature = ?, stream_id = ?, podcast_id = ?, date = ?, status = ? WHERE id = ?',
+        [
+          webradioShow.title,
+          webradioShow.description,
+          webradioShow.miniature,
+          webradioShow.streamId,
+          webradioShow.podcastId,
+          webradioShow.date,
+          webradioShow.status,
+          showId
+        ]
+      )
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    var webradioShows: WebradioShow[] = []
+
+    try {
+      webradioShows = await db.query<WebradioShow[]>('SELECT * FROM webradio_shows ORDER BY date DESC')
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    return new DataSuccess(200, SUCCESS, 'Success', { shows: webradioShows })
+  }
+
+  async deleteWebradioShow(headers: IncomingHttpHeaders, showId: number, next: NextFunction): Promise<DataSuccess<{ shows: WebradioShow[] }>> {
+    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+
+    if (!auth.status) {
+      next(auth.exception)
+      throw null
+    }
+
+    var webradioShow: WebradioShow
+
+    try {
+      webradioShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE id = ?', +showId))[0]
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    if (!webradioShow || !webradioShow.id) {
+      next(new RequestException('Show not found'))
+      throw null
+    }
+
+    try {
+      await db.query('DELETE FROM webradio_shows WHERE id = ?', +showId)
     } catch (error) {
       next(new DBException(undefined, error))
       throw null
@@ -210,5 +253,3 @@ class Webradio {
     return new DataSuccess(200, SUCCESS, 'Success', { shows: webradioShows })
   }
 }
-
-export default Webradio

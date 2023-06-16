@@ -9,7 +9,7 @@ import { DefaultSuccess } from '$responses/success/default-success.response'
 import jwt from '$utils/jwt'
 import nexter from '$utils/nexter'
 
-class Auth {
+export default class Auth {
   async auth(headers: IncomingHttpHeaders, next: NextFunction): Promise<DataSuccess<{ jwt: string }>> {
     const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Basic'))
 
@@ -54,5 +54,3 @@ class Auth {
     return new DefaultSuccess()
   }
 }
-
-export default Auth
