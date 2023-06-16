@@ -40,7 +40,7 @@ export default class WebradioRouter implements Route {
      *   get:
      *     tags:
      *       - Webradio
-     *     summary: Get current shows
+     *     summary: Get current show
      *     responses:
      *       200:
      *         description: Show
@@ -55,6 +55,29 @@ export default class WebradioRouter implements Route {
           } else {
             res.status(resp.httpStatus).send({ code: resp.code, message: resp.message })
           }
+        } catch (error) {}
+      }
+    )
+
+    /**
+     * @openapi
+     * /webradio/shows/all:
+     *   get:
+     *     tags:
+     *       - Webradio
+     *     security:
+     *       - bearer: []
+     *     summary: Get all shows
+     *     responses:
+     *       200:
+     *         description: Shows
+     */
+    this.router.get(
+      `${this.path}/shows/all`,
+      async (req: Request, res: Response<DataHttpResponse<{ shows: WebradioShow[] }>>, next: NextFunction) => {
+        try {
+          const resp = await new Webradio().getAllWebradioShows(req.headers, next)
+          res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
         } catch (error) {}
       }
     )

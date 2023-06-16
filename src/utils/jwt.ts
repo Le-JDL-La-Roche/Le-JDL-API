@@ -36,7 +36,7 @@ class JWT {
 
     return jwt.sign(
       {
-        name: 'lejdl@laroche.org',
+        name: process.env['ADMIN_USERNAME'],
       },
       secretKey,
       { subject: 0 + '', expiresIn: '30 days' }
