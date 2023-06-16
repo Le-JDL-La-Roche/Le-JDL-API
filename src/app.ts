@@ -38,6 +38,7 @@ export default class App {
   }
 
   private initRoutes(routes: Route[]) {
+    this.expressApp.use('/public', express.static('public'))
     routes.forEach((route) => {
       this.expressApp.use('/', route.router)
     })

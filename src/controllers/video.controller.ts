@@ -67,7 +67,7 @@ export default class Videos {
     }
 
     try {
-      await db.query('INSERT INTO videos (title, description, miniature, video_id, type, category, date) VALUES (?, ?, ?, ?, ?, ?, ?)', [
+      await db.query('INSERT INTO videos (title, description, thumbnail, video_id, type, category, date) VALUES (?, ?, ?, ?, ?, ?, ?)', [
         body.title + '',
         body.description + '',
         file.filename + '',
@@ -129,7 +129,7 @@ export default class Videos {
     video = {
       title: body.title ? body.title + '' : video.title,
       description: body.description ? body.description + '' : video.description,
-      miniature: file ? file.filename + '' : video.miniature,
+      thumbnail: file ? file.filename + '' : video.thumbnail,
       videoId: body.videoId ? body.videoId + '' : video.videoId,
       type: body.type ? body.type : video.type,
       category: body.category ? body.category : video.category,
@@ -137,10 +137,10 @@ export default class Videos {
     }
 
     try {
-      await db.query('UPDATE videos SET title = ?, description = ?, miniature = ?, video_id = ?, type = ?, category = ?, date = ? WHERE id = ?', [
+      await db.query('UPDATE videos SET title = ?, description = ?, thumbnail = ?, video_id = ?, type = ?, category = ?, date = ? WHERE id = ?', [
         video.title,
         video.description,
-        video.miniature,
+        video.thumbnail,
         video.videoId,
         video.type,
         video.category,
