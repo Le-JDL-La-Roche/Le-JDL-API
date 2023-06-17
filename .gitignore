@@ -11,4 +11,6 @@ vite.config.ts.timestamp-*
 .vscode
 
 /public/images/content/*.png
-/public/images/posters/*.png
+/public/images/content/*.jpg
+/public/images/thumbnails/*.png
+/public/images/thumbnails/*.jpg

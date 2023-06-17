@@ -29,7 +29,7 @@ export default class Videos {
     var video: Video
 
     try {
-      video = (await db.query<Video[]>('SELECT * FROM videos WHERE id = ?', videoId))[0]
+      video = (await db.query<Video[]>('SELECT * FROM videos WHERE id = ?', +videoId))[0]
     } catch (error) {
       next(new DBException(undefined, error))
       throw null
@@ -62,7 +62,7 @@ export default class Videos {
     }
 
     if ((body.type != 'youtube' && body.type != 'instagram') || !this.cat.includes(body.category)) {
-      next(new RequestException('Invalid parameter'))
+      next(new RequestException('Invalid parameters'))
       throw null
     }
 
@@ -95,8 +95,8 @@ export default class Videos {
 
   async putVideo(
     headers: IncomingHttpHeaders,
-    body: Video,
     videoId: number,
+    body: Video,
     file: Express.Multer.File | null,
     next: NextFunction
   ): Promise<DataSuccess<{ videos: Video[] }>> {
@@ -110,7 +110,7 @@ export default class Videos {
     var video: Video
 
     try {
-      video = (await db.query<Video[]>('SELECT * FROM videos WHERE id = ?', videoId))[0]
+      video = (await db.query<Video[]>('SELECT * FROM videos WHERE id = ?', +videoId))[0]
     } catch (error) {
       next(new DBException(undefined, error))
       throw null
@@ -121,8 +121,11 @@ export default class Videos {
       throw null
     }
 
-    if ((body.category != null && !this.cat.includes(body.category)) || (body.type != null && body.type != 'youtube' && body.type != 'instagram')) {
-      next(new RequestException('Invalid parameter'))
+    if (
+      (body.category != null && body.category != '' && !this.cat.includes(body.category)) ||
+      (body.type != null && body.type! != '' && body.type != 'youtube' && body.type != 'instagram')
+    ) {
+      next(new RequestException('Invalid parameters'))
       throw null
     }
 
@@ -133,19 +136,18 @@ export default class Videos {
       videoId: body.videoId ? body.videoId + '' : video.videoId,
       type: body.type ? body.type : video.type,
       category: body.category ? body.category : video.category,
-      date: body.date ? body.date : video.date
+      date: video.date
     }
 
     try {
-      await db.query('UPDATE videos SET title = ?, description = ?, thumbnail = ?, video_id = ?, type = ?, category = ?, date = ? WHERE id = ?', [
+      await db.query('UPDATE videos SET title = ?, description = ?, thumbnail = ?, video_id = ?, type = ?, category = ? WHERE id = ?', [
         video.title,
         video.description,
         video.thumbnail,
         video.videoId,
         video.type,
         video.category,
-        video.date,
-        videoId
+        +videoId
       ])
     } catch (error) {
       next(new DBException(undefined, error))
@@ -175,7 +177,7 @@ export default class Videos {
     var video: Video
 
     try {
-      video = (await db.query<Video[]>('SELECT * FROM videos WHERE id = ?', videoId))[0]
+      video = (await db.query<Video[]>('SELECT * FROM videos WHERE id = ?', +videoId))[0]
     } catch (error) {
       next(new DBException(undefined, error))
       throw null
@@ -187,7 +189,7 @@ export default class Videos {
     }
 
     try {
-      await db.query('DELETE FROM videos WHERE id = ?', videoId)
+      await db.query('DELETE FROM videos WHERE id = ?', +videoId)
     } catch (error) {
       next(new DBException(undefined, error))
       throw null
