@@ -107,7 +107,7 @@ export default class Webradio {
     }
 
     if (+body.status != -1 && +body.status != 0 && +body.status != 1 && +body.status != 2) {
-      next(new RequestException('Invalid parameter'))
+      next(new RequestException('Invalid parameters'))
       throw null
     }
 
@@ -167,7 +167,7 @@ export default class Webradio {
     }
 
     if (body.status != null && body.status != undefined && +body.status != -1 && +body.status != 0 && +body.status != 1 && +body.status != 2) {
-      next(new RequestException('Invalid parameter'))
+      next(new RequestException('Invalid parameters'))
       throw null
     }
 
@@ -192,7 +192,7 @@ export default class Webradio {
           webradioShow.podcastId,
           webradioShow.date,
           webradioShow.status,
-          showId
+          +showId
         ]
       )
     } catch (error) {

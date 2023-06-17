@@ -12,7 +12,7 @@ export class FilesService {
   async uploadWebradioThumbnail(req: Request, res: Response, next: NextFunction) {
     const webradio = multer.diskStorage({
       destination: (req, file, next) => {
-        next(null, './public/images/posters/')
+        next(null, './public/images/thumbnails/')
       },
       filename: (req, file, next) => {
         const uniqueSuffix = Date.now().toString(16)
@@ -43,7 +43,7 @@ export class FilesService {
   async uploadVideoThumbnail(req: Request, res: Response, next: NextFunction) {
     const video = multer.diskStorage({
       destination: (req, file, next) => {
-        next(null, './public/images/posters/')
+        next(null, './public/images/thumbnails/')
       },
       filename: (req, file, next) => {
         const uniqueSuffix = Date.now().toString(16)
@@ -53,6 +53,37 @@ export class FilesService {
     })
 
     const upload = multer({ storage: video }).single('thumbnail')
+    const auth = nexter.serviceToException(await new AuthService().checkAuth(req.headers['authorization'] + '', 'Bearer'))
+
+    if (!auth.status) {
+      res.status(401).json({ code: AUTH_ERROR, message: 'Unauthorized' })
+      return
+    }
+
+    upload(req, res, async (err: any) => {
+      if (err instanceof multer.MulterError) {
+        console.error(1, err)
+      } else if (err) {
+        console.error(2, err)
+      }
+      next()
+    })
+  }
+
+  //! ARTICLE
+  async uploadArticleThumbnail(req: Request, res: Response, next: NextFunction) {
+    const article = multer.diskStorage({
+      destination: (req, file, next) => {
+        next(null, './public/images/thumbnails/')
+      },
+      filename: (req, file, next) => {
+        const uniqueSuffix = Date.now().toString(16)
+        const fileExtension = file.originalname.split('.').pop()
+        next(null, 'article' + `-${uniqueSuffix}.${fileExtension}`)
+      }
+    })
+
+    const upload = multer({ storage: article }).single('thumbnail')
     const auth = nexter.serviceToException(await new AuthService().checkAuth(req.headers['authorization'] + '', 'Bearer'))
 
     if (!auth.status) {

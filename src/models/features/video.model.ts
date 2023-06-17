@@ -4,7 +4,7 @@ export interface Video {
   description: string
   thumbnail: string
   videoId: string
-  type: 'youtube' | 'instagram'
-  category: 'news' | 'culture' | 'sport' | 'science' | 'tech' | 'laroche'
+  type: 'youtube' | 'instagram' | ''
+  category: 'news' | 'culture' | 'sport' | 'science' | 'tech' | 'laroche' | ''
   date: string
 }

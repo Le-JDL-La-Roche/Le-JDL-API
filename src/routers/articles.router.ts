@@ -1,14 +1,15 @@
-import Videos from '$controllers/videos.controller'
-import { Video } from '$models/features/video.model'
 import { Route } from '$models/handle/route.model'
-import { DataHttpResponse } from '$models/responses/http/data-http-response.model'
-import { FilesService } from '$services/files.service'
-import { NextFunction, Router } from 'express'
+import { Router } from 'express'
+import { NextFunction } from 'express-serve-static-core'
 import { Request, Response } from 'express'
+import Articles from '$controllers/articles.controller'
+import { DataHttpResponse } from '$models/responses/http/data-http-response.model'
+import { Article } from '$models/features/article.model'
+import { FilesService } from '$services/files.service'
 
-export default class VideosRouter implements Route {
+export default class ArticlesRouter implements Route {
   router = Router()
-  path = '/videos'
+  path = '/articles'
 
   constructor() {
     this.init()
@@ -17,53 +18,53 @@ export default class VideosRouter implements Route {
   private init() {
     /**
      * @openapi
-     * /videos:
+     * /articles:
      *   get:
      *     tags:
-     *       - Videos
-     *     summary: Get videos
+     *       - Articles
+     *     summary: Get articles
      *     responses:
      *       200:
-     *         description: Videos
+     *         description: Articles
      */
-    this.router.get(`${this.path}`, async (req: Request, res: Response<DataHttpResponse<{ videos: Video[] }>>, next: NextFunction) => {
+    this.router.get(`${this.path}`, async (req: Request, res: Response<DataHttpResponse<{ articles: Article[] }>>, next: NextFunction) => {
       try {
-        const resp = await new Videos().getVideos(next)
+        const resp = await new Articles().getArticles(next)
         res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
       } catch (error) {}
     })
 
     /**
      * @openapi
-     * /videos/{video_id}:
+     * /articles/{article_id}:
      *   get:
      *     tags:
-     *       - Videos
-     *     summary: Get video by ID
+     *       - Articles
+     *     summary: Get article by ID
      *     parameters:
      *       - in: path
-     *         name: video_id
+     *         name: article_id
      *         required: true
      *     responses:
      *       200:
-     *         description: Video
+     *         description: Article
      */
-    this.router.get(`${this.path}/:id`, async (req: Request, res: Response<DataHttpResponse<{ video: Video }>>, next: NextFunction) => {
+    this.router.get(`${this.path}/:id`, async (req: Request, res: Response<DataHttpResponse<{ article: Article }>>, next: NextFunction) => {
       try {
-        const resp = await new Videos().getVideo(+req.params.id, next)
+        const resp = await new Articles().getArticle(+req.params.id, next)
         res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
       } catch (error) {}
     })
 
     /**
      * @openapi
-     * /videos:
+     * /articles:
      *   post:
      *     tags:
-     *       - Videos
+     *       - Articles
      *     security:
      *       - bearer: []
-     *     summary: Post a new video
+     *     summary: Post a new article
      *     requestBody:
      *       required: false
      *       content:
@@ -73,26 +74,26 @@ export default class VideosRouter implements Route {
      *             properties:
      *               title:
      *                 type: string
-     *               description:
+     *               article:
      *                 type: string
-     *               videoId:
+     *               thumbnailSrc:
      *                 type: string
      *               category:
      *                 type: string
-     *               type:
+     *               author:
      *                 type: string
      *               thumbnail:
      *                 type: file
      *     responses:
      *       200:
-     *         description: Video posted
+     *         description: Article posted
      */
     this.router.post(
       `${this.path}`,
-      new FilesService().uploadVideoThumbnail,
-      async (req: Request, res: Response<DataHttpResponse<{ videos: Video[] }>>, next: NextFunction) => {
+      new FilesService().uploadArticleThumbnail,
+      async (req: Request, res: Response<DataHttpResponse<{ articles: Article[] }>>, next: NextFunction) => {
         try {
-          const resp = await new Videos().postVideo(req.headers, req.body, req.file || null, next)
+          const resp = await new Articles().postArticle(req.headers, req.body, req.file || null, next)
           res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
         } catch (error) {}
       }
@@ -100,16 +101,16 @@ export default class VideosRouter implements Route {
 
     /**
      * @openapi
-     * /videos/{video_id}:
+     * /articles/{article_id}:
      *   put:
      *     tags:
-     *       - Videos
+     *       - Articles
      *     security:
      *       - bearer: []
-     *     summary: Put a video by ID
+     *     summary: Put an article by ID
      *     parameters:
      *       - in: path
-     *         name: video_id
+     *         name: article_id
      *         required: true
      *     requestBody:
      *       required: false
@@ -120,26 +121,26 @@ export default class VideosRouter implements Route {
      *             properties:
      *               title:
      *                 type: string
-     *               description:
+     *               article:
      *                 type: string
-     *               videoId:
+     *               thumbnailSrc:
      *                 type: string
      *               category:
      *                 type: string
-     *               type:
+     *               author:
      *                 type: string
      *               thumbnail:
      *                 type: file
      *     responses:
      *       200:
-     *         description: Video updated
+     *         description: Article updated
      */
     this.router.put(
       `${this.path}/:id`,
-      new FilesService().uploadVideoThumbnail,
-      async (req: Request, res: Response<DataHttpResponse<{ videos: Video[] }>>, next: NextFunction) => {
+      new FilesService().uploadArticleThumbnail,
+      async (req: Request, res: Response<DataHttpResponse<{ articles: Article[] }>>, next: NextFunction) => {
         try {
-          const resp = await new Videos().putVideo(req.headers, +req.params.id, req.body, req.file || null, next)
+          const resp = await new Articles().putArticle(req.headers, +req.params.id, req.body, req.file || null, next)
           res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
         } catch (error) {}
       }
@@ -147,24 +148,24 @@ export default class VideosRouter implements Route {
 
     /**
      * @openapi
-     * /videos/{video_id}:
+     * /articles/{article_id}:
      *   delete:
      *     tags:
-     *       - Videos
+     *       - Articles
      *     security:
      *       - bearer: []
-     *     summary: Delete a video by ID
+     *     summary: Delete an article by ID
      *     parameters:
      *       - in: path
-     *         name: video_id
+     *         name: article_id
      *         required: true
      *     responses:
      *       200:
-     *         description: Video deleted
+     *         description: Article deleted
      */
-    this.router.delete(`${this.path}/:id`, async (req: Request, res: Response<DataHttpResponse<{ videos: Video[] }>>, next: NextFunction) => {
+    this.router.delete(`${this.path}/:id`, async (req: Request, res: Response<DataHttpResponse<{ articles: Article[] }>>, next: NextFunction) => {
       try {
-        const resp = await new Videos().deleteVideo(req.headers, +req.params.id, next)
+        const resp = await new Articles().deleteArticle(req.headers, +req.params.id, next)
         res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
       } catch (error) {}
     })
