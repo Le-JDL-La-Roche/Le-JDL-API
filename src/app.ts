@@ -7,6 +7,7 @@ import errorMiddleware from '$middlewares/error.middleware'
 import notFountMiddleware from '$middlewares/not-found.middleware'
 import { Route } from '$models/handle/route.model'
 import { IO } from '$models/handle/io.model'
+import cors from 'cors'
 
 export default class App {
   private expressApp = express()
@@ -30,6 +31,7 @@ export default class App {
   }
 
   private initMiddlewares() {
+    this.expressApp.use(cors())
     this.expressApp.use(bodyParser.urlencoded({ extended: false }), bodyParser.json())
   }
 

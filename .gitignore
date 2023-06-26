@@ -10,7 +10,7 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vscode
 
-/public/images/content/*.png
-/public/images/content/*.jpg
-/public/images/thumbnails/*.png
-/public/images/thumbnails/*.jpg
+/public/images/content/*.*
+/public/images/content/*.*
+/public/images/thumbnails/*.*
+/public/images/thumbnails/*.*
