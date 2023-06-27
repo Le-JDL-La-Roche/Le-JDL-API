@@ -81,6 +81,8 @@ export default class VideosRouter implements Route {
      *                 type: string
      *               type:
      *                 type: string
+     *               author:
+     *                 type: string
      *               thumbnail:
      *                 type: file
      *     responses:
@@ -127,6 +129,8 @@ export default class VideosRouter implements Route {
      *               category:
      *                 type: string
      *               type:
+     *                 type: string
+     *               author:
      *                 type: string
      *               thumbnail:
      *                 type: file

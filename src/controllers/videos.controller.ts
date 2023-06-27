@@ -56,7 +56,7 @@ export default class Videos {
       throw null
     }
 
-    if (!body.title || !body.description || !file || !body.type || !body.videoId || !body.category) {
+    if (!body.title || !body.description || !file || !body.type || !body.videoId || !body.category || !body.author) {
       next(new RequestException('Missing parameters'))
       throw null
     }
@@ -67,13 +67,14 @@ export default class Videos {
     }
 
     try {
-      await db.query('INSERT INTO videos (title, description, thumbnail, video_id, type, category, date) VALUES (?, ?, ?, ?, ?, ?, ?)', [
+      await db.query('INSERT INTO videos (title, description, thumbnail, video_id, type, category, author, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [
         body.title + '',
         body.description + '',
         file.filename + '',
         body.videoId + '',
         body.type + '',
         body.category + '',
+        body.author + '',
         Math.round(Date.now() / 1000)
       ])
     } catch (error) {
@@ -136,17 +137,19 @@ export default class Videos {
       videoId: body.videoId ? body.videoId + '' : video.videoId,
       type: body.type ? body.type : video.type,
       category: body.category ? body.category : video.category,
+      author: body.author ? body.author + '' : video.author,
       date: video.date
     }
 
     try {
-      await db.query('UPDATE videos SET title = ?, description = ?, thumbnail = ?, video_id = ?, type = ?, category = ? WHERE id = ?', [
+      await db.query('UPDATE videos SET title = ?, description = ?, thumbnail = ?, video_id = ?, type = ?, category = ?, author = ? WHERE id = ?', [
         video.title,
         video.description,
         video.thumbnail,
         video.videoId,
         video.type,
         video.category,
+        video.author,
         +videoId
       ])
     } catch (error) {
