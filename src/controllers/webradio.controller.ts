@@ -111,6 +111,20 @@ export default class Webradio {
       throw null
     }
 
+    let liveShow: WebradioShow
+
+    try {
+      liveShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = 0'))[0]
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    if (liveShow && liveShow.id && +body.status == 0) {
+      next(new RequestException('A show is already live'))
+      throw null
+    }
+
     try {
       await db.query('INSERT INTO webradio_shows (title, description, thumbnail, stream_id, podcast_id, date, status) VALUES (?, ?, ?, ?, ?, ?, ?)', [
         body.title + '',
@@ -168,6 +182,20 @@ export default class Webradio {
 
     if (body.status != null && body.status != undefined && +body.status != -1 && +body.status != 0 && +body.status != 1 && +body.status != 2) {
       next(new RequestException('Invalid parameters'))
+      throw null
+    }
+
+    let liveShow: WebradioShow
+
+    try {
+      liveShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = 0'))[0]
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    if (liveShow && liveShow.id && liveShow.id != webradioShow.id && +body.status == 0) {
+      next(new RequestException('A show is already live'))
       throw null
     }
 
