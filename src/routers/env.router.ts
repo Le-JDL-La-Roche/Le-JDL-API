@@ -48,5 +48,29 @@ export default class EnvRouter implements Route {
         res.status(resp.httpStatus).send({ code: resp.code, message: resp.message })
       } catch (error) {}
     })
+
+    /**
+     * @openapi
+     * /visits/{timestamp}:
+     *   delete:
+     *     tags:
+     *       - Environnement
+     *     security:
+     *       - bearer: []
+     *     summary: Remove admin visits
+     *     parameters:
+     *       - in: path
+     *         name: timestamp
+     *         required: true
+     *     responses:
+     *       200:
+     *         description: Visits deleted
+     */
+    this.router.delete('/visits/:timestamp', async (req: Request, res: Response<DefaultHttpResponse>, next: NextFunction) => {
+      try {
+        const resp = await new Env().deleteAdminVisits(req.headers, +req.params.timestamp, next)
+        res.status(resp.httpStatus).send({ code: resp.code, message: resp.message })
+      } catch (error) {}
+    })
   }
 }
