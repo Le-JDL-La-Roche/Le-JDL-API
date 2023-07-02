@@ -4,6 +4,9 @@ import { DataSuccess } from '$responses/success/data-success.response'
 import { NextFunction } from 'express'
 import { DBException } from '$responses/exceptions/db-exception.response'
 import { DefaultSuccess } from '$responses/success/default-success.response'
+import nexter from '$utils/nexter'
+import { AuthService } from '$services/auth.service'
+import { IncomingHttpHeaders } from 'http'
 
 export default class Env {
   async getEnv(next: NextFunction): Promise<DataSuccess<{ visits: Visits; shows: Shows; videos: Videos; articles: Articles }>> {
@@ -129,6 +132,40 @@ export default class Env {
       next(new DBException())
       console.log(error)
       throw null
+    }
+
+    return new DefaultSuccess(200, SUCCESS, 'Success')
+  }
+
+  async deleteAdminVisits(headers: IncomingHttpHeaders, timestamp: number, next: NextFunction): Promise<DefaultSuccess> {
+    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+
+    if (!auth.status) {
+      next(auth.exception)
+      throw null
+    }
+
+    let tMin = timestamp - 3600
+    let tMax = timestamp + 3600
+
+    console.log(tMin, tMax)
+
+    let [visits]: Visits['visits'] = []
+
+    try {
+      visits = (await db.query<Visits['visits']>('SELECT * FROM visits WHERE timestamp >= ? AND timestamp <= ?', [tMin, tMax]))[0]
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    if (visits && visits.visits > 0) {
+      try {
+        await db.query('UPDATE visits SET visits = ? WHERE timestamp >= ? AND timestamp <= ?', [visits.visits - 1, tMin, tMax])
+      } catch (error) {
+        next(new DBException(undefined, error))
+        throw null
+      }
     }
 
     return new DefaultSuccess(200, SUCCESS, 'Success')
