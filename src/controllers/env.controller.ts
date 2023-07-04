@@ -10,14 +10,21 @@ import { IncomingHttpHeaders } from 'http'
 
 export default class Env {
   async getEnv(next: NextFunction): Promise<DataSuccess<{ visits: Visits; shows: Shows; videos: Videos; articles: Articles }>> {
-    var visits: Visits = { total: 0, visits: [] }
-    var shows: Shows = { total: 0, status: { draft: 0, live: 0, waiting: 0, podcast: 0 } }
-    var videos: Videos = {
+    try {
+      await this.updateDb()
+    } catch (error) {
+      next(error)
+      throw null
+    }
+
+    let visits: Visits = { total: 0, visits: [] }
+    let shows: Shows = { total: 0, status: { draft: 0, live: 0, waiting: 0, podcast: 0 } }
+    let videos: Videos = {
       total: 0,
       category: { news: 0, culture: 0, sport: 0, science: 0, tech: 0, laroche: 0 },
       type: { youtube: 0, instagram: 0 }
     }
-    var articles: Articles = { total: 0, category: { news: 0, culture: 0, sport: 0, science: 0, tech: 0, laroche: 0 } }
+    let articles: Articles = { total: 0, category: { news: 0, culture: 0, sport: 0, science: 0, tech: 0, laroche: 0 } }
 
     try {
       visits.visits = await db.query('SELECT * FROM visits ORDER BY timestamp DESC')
@@ -81,46 +88,13 @@ export default class Env {
   }
 
   async updateVisits(next: NextFunction): Promise<DefaultSuccess> {
-    var visits: Visits['visits'] = []
+    let visits: Visits['visits'] = []
 
     try {
-      visits = await db.query('SELECT * FROM visits ORDER BY timestamp DESC')
+      visits = await this.updateDb()
     } catch (error) {
-      next(new DBException())
+      next(error)
       throw null
-    }
-
-    if (!visits[0]) {
-      visits.unshift({
-        id: 1,
-        timestamp: new Date(new Date().setHours(0, 0, 0, 0)).getTime() / 1000,
-        visits: 0
-      })
-
-      try {
-        await db.query('INSERT INTO visits (timestamp, visits) VALUES (?, 0)', new Date(new Date().setHours(0, 0, 0, 0)).getTime() / 1000)
-      } catch (error) {
-        next(new DBException())
-        console.log(error)
-        throw null
-      }
-    }
-
-    while (visits[0].timestamp - Date.now() / 1000 <= -86400) {
-      let t = visits[0].timestamp + 86400
-      visits.unshift({
-        id: visits[0].id + 1,
-        timestamp: t,
-        visits: 0
-      })
-
-      try {
-        await db.query('INSERT INTO visits (timestamp, visits) VALUES (?, 0)', t)
-      } catch (error) {
-        next(new DBException())
-        console.log(error)
-        throw null
-      }
     }
 
     try {
@@ -169,6 +143,47 @@ export default class Env {
     }
 
     return new DefaultSuccess(200, SUCCESS, 'Success')
+  }
+
+  private async updateDb() {
+    let visits: Visits['visits'] = []
+
+    try {
+      visits = await db.query('SELECT * FROM visits ORDER BY timestamp DESC')
+    } catch (error) {
+      throw new DBException(undefined, error)
+    }
+
+    if (!visits[0]) {
+      visits.unshift({
+        id: 1,
+        timestamp: new Date(new Date().setHours(0, 0, 0, 0)).getTime() / 1000,
+        visits: 0
+      })
+
+      try {
+        await db.query('INSERT INTO visits (timestamp, visits) VALUES (?, 0)', new Date(new Date().setHours(0, 0, 0, 0)).getTime() / 1000)
+      } catch (error) {
+        throw new DBException(undefined, error)
+      }
+    }
+
+    while (visits[0].timestamp - Date.now() / 1000 <= -86400) {
+      let t = visits[0].timestamp + 86400
+      visits.unshift({
+        id: visits[0].id + 1,
+        timestamp: t,
+        visits: 0
+      })
+
+      try {
+        await db.query('INSERT INTO visits (timestamp, visits) VALUES (?, 0)', t)
+      } catch (error) {
+        throw new DBException(undefined, error)
+      }
+    }
+
+    return visits
   }
 }
 
