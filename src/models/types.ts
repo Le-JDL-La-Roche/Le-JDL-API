@@ -6,7 +6,7 @@ import { RequestException } from '$responses/exceptions/request-exception.respon
 import { DefaultSuccess } from '$responses/success/default-success.response'
 import { DataSuccess } from '$responses/success/data-success.response'
 
-export type varchar = string
+export type letchar = string
 
 export type tinyint = number
 

@@ -7,6 +7,7 @@ import { DefaultSuccess } from '$responses/success/default-success.response'
 import nexter from '$utils/nexter'
 import { AuthService } from '$services/auth.service'
 import { IncomingHttpHeaders } from 'http'
+import { RequestException } from '$responses/exceptions/request-exception.response'
 
 export default class Env {
   async getEnv(next: NextFunction): Promise<DataSuccess<{ visits: Visits; shows: Shows; videos: Videos; articles: Articles }>> {
@@ -182,6 +183,137 @@ export default class Env {
 
     return visits
   }
+
+  async getJournalists(next: NextFunction): Promise<DataSuccess<Journalist[]>> {
+    let journalists: Journalist[] = []
+
+    try {
+      journalists = await db.query<Journalist[]>('SELECT * FROM journalists')
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    return new DataSuccess(200, SUCCESS, 'Success', journalists)
+  }
+
+  async postJournalist(headers: IncomingHttpHeaders, body: Journalist, next: NextFunction): Promise<DataSuccess<Journalist[]>> {
+    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+
+    if (!auth.status) {
+      next(auth.exception)
+      throw null
+    }
+
+    if (!body.name || !body.class) {
+      next(new RequestException('Missing parameters'))
+      throw null
+    }
+
+    try {
+      await db.query('INSERT INTO journalists (name, class) VALUES (?, ?)', [body.name, body.class])
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    let journalists: Journalist[] = []
+
+    try {
+      journalists = await db.query<Journalist[]>('SELECT * FROM journalists')
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    return new DataSuccess(200, SUCCESS, 'Success', journalists)
+  }
+
+  async putJournalist(headers: IncomingHttpHeaders, journalistId: number, body: Journalist, next: NextFunction): Promise<DataSuccess<Journalist[]>> {
+    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+
+    if (!auth.status) {
+      next(auth.exception)
+      throw null
+    }
+
+    let journalist: Journalist
+
+    try {
+      journalist = (await db.query<Journalist[]>('SELECT * FROM journalists WHERE id = ?', journalistId))[0]
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    if (!journalist) {
+      next(new RequestException('Journalist not found'))
+      throw null
+    }
+
+    try {
+      await db.query('UPDATE journalists SET name = ?, class = ? WHERE id = ?', [
+        body.name || journalist.name,
+        body.class || journalist.class,
+        journalistId
+      ])
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    let journalists: Journalist[] = []
+
+    try {
+      journalists = await db.query<Journalist[]>('SELECT * FROM journalists')
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    return new DataSuccess(200, SUCCESS, 'Success', journalists)
+  }
+
+  async deleteJournalist(headers: IncomingHttpHeaders, journalistId: number, next: NextFunction): Promise<DataSuccess<Journalist[]>> {
+    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+
+    if (!auth.status) {
+      next(auth.exception)
+      throw null
+    }
+
+    let journalist: Journalist
+
+    try {
+      journalist = (await db.query<Journalist[]>('SELECT * FROM journalists WHERE id = ?', journalistId))[0]
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    if (!journalist) {
+      next(new RequestException('Journalist not found'))
+      throw null
+    }
+
+    try {
+      await db.query('DELETE FROM journalists WHERE id = ?', journalistId)
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    let journalists: Journalist[] = []
+
+    try {
+      journalists = await db.query<Journalist[]>('SELECT * FROM journalists')
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    return new DataSuccess(200, SUCCESS, 'Success', journalists)
+  }
 }
 
 interface Visits {
@@ -229,4 +361,10 @@ interface Articles {
     tech: number
     laroche: number
   }
+}
+
+interface Journalist {
+  id?: number
+  name: string
+  class: string
 }

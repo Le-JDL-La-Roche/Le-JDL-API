@@ -13,7 +13,7 @@ export default class Videos {
   private readonly cat = ['news', 'culture', 'sport', 'science', 'tech', 'laroche']
 
   async getVideos(next: NextFunction): Promise<DataSuccess<{ videos: Video[] }>> {
-    var videos: Video[] = []
+    let videos: Video[] = []
 
     try {
       videos = await db.query<Video[]>('SELECT * FROM videos ORDER BY date DESC')
@@ -26,7 +26,7 @@ export default class Videos {
   }
 
   async getVideo(videoId: number, next: NextFunction): Promise<DataSuccess<{ video: Video }>> {
-    var video: Video
+    let video: Video
 
     try {
       video = (await db.query<Video[]>('SELECT * FROM videos WHERE id = ?', +videoId))[0]
@@ -82,7 +82,7 @@ export default class Videos {
       throw null
     }
 
-    var videos: Video[] = []
+    let videos: Video[] = []
 
     try {
       videos = await db.query<Video[]>('SELECT * FROM videos ORDER BY date DESC')
@@ -108,7 +108,7 @@ export default class Videos {
       throw null
     }
 
-    var video: Video
+    let video: Video
 
     try {
       video = (await db.query<Video[]>('SELECT * FROM videos WHERE id = ?', +videoId))[0]
@@ -157,7 +157,7 @@ export default class Videos {
       throw null
     }
 
-    var videos: Video[] = []
+    let videos: Video[] = []
 
     try {
       videos = await db.query<Video[]>('SELECT * FROM videos ORDER BY date DESC')
@@ -177,7 +177,7 @@ export default class Videos {
       throw null
     }
 
-    var video: Video
+    let video: Video
 
     try {
       video = (await db.query<Video[]>('SELECT * FROM videos WHERE id = ?', +videoId))[0]
@@ -198,7 +198,7 @@ export default class Videos {
       throw null
     }
 
-    var videos: Video[] = []
+    let videos: Video[] = []
 
     try {
       videos = await db.query<Video[]>('SELECT * FROM videos ORDER BY date DESC')
