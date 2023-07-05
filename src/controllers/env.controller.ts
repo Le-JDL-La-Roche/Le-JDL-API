@@ -104,7 +104,6 @@ export default class Env {
       ])
     } catch (error) {
       next(new DBException())
-      console.log(error)
       throw null
     }
 
@@ -121,8 +120,6 @@ export default class Env {
 
     let tMin = timestamp - 3600
     let tMax = timestamp + 3600
-
-    console.log(tMin, tMax)
 
     let [visits]: Visits['visits'] = []
 
