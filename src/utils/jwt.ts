@@ -5,8 +5,8 @@ import { count } from '$models/types'
 class JWT {
   async verify(token: string): Promise<[true, JwtPayload | string] | [false, number, string]> {
     const secretKey = process.env['JWT_SECRET_KEY']
-    var decoded: JwtPayload | string
-    var isJwt: count
+    let decoded: JwtPayload | string
+    let isJwt: count
 
     try {
       decoded = jwt.verify(token, secretKey + '')

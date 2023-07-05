@@ -13,7 +13,7 @@ export default class Articles {
   private readonly cat = ['news', 'culture', 'sport', 'science', 'tech', 'laroche']
 
   async getArticles(next: NextFunction): Promise<DataSuccess<{ articles: Article[] }>> {
-    var articles: Article[] = []
+    let articles: Article[] = []
 
     try {
       articles = await db.query<Article[]>('SELECT * FROM articles ORDER BY date DESC')
@@ -26,7 +26,7 @@ export default class Articles {
   }
 
   async getArticle(articleId: number, next: NextFunction): Promise<DataSuccess<{ article: Article }>> {
-    var article: Article
+    let article: Article
 
     try {
       article = (await db.query<Article[]>('SELECT * FROM articles WHERE id = ?', +articleId))[0]
@@ -88,7 +88,7 @@ export default class Articles {
       throw null
     }
 
-    var articles: Article[] = []
+    let articles: Article[] = []
 
     try {
       articles = await db.query<Article[]>('SELECT * FROM articles ORDER BY date DESC')
@@ -114,7 +114,7 @@ export default class Articles {
       throw null
     }
 
-    var article: Article
+    let article: Article
 
     try {
       article = (await db.query<Article[]>('SELECT * FROM articles WHERE id = ?', +articleId))[0]
@@ -158,7 +158,7 @@ export default class Articles {
       throw null
     }
 
-    var articles: Article[] = []
+    let articles: Article[] = []
 
     try {
       articles = await db.query<Article[]>('SELECT * FROM articles ORDER BY date DESC')
@@ -178,7 +178,7 @@ export default class Articles {
       throw null
     }
 
-    var article: Article
+    let article: Article
 
     try {
       article = (await db.query<Article[]>('SELECT * FROM articles WHERE id = ?', +articleId))[0]
@@ -199,7 +199,7 @@ export default class Articles {
       throw null
     }
 
-    var articles: Article[] = []
+    let articles: Article[] = []
 
     try {
       articles = await db.query<Article[]>('SELECT * FROM articles ORDER BY date DESC')

@@ -12,7 +12,7 @@ import { RequestException } from '$responses/exceptions/request-exception.respon
 
 export default class Webradio {
   async getPublishedWebradioShows(next: NextFunction): Promise<DataSuccess<{ shows: WebradioShow[] }>> {
-    var webradioShows: WebradioShow[] = []
+    let webradioShows: WebradioShow[] = []
 
     try {
       webradioShows = await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = 2 ORDER BY date DESC')
@@ -25,7 +25,7 @@ export default class Webradio {
   }
 
   async getCurrentWebradioShow(next: NextFunction): Promise<DataSuccess<{ show: WebradioShow } | null>> {
-    var webradioShow: WebradioShow
+    let webradioShow: WebradioShow
 
     try {
       webradioShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = 0 ORDER BY date DESC'))[0]
@@ -49,7 +49,7 @@ export default class Webradio {
       throw null
     }
 
-    var webradioShows: WebradioShow[] = []
+    let webradioShows: WebradioShow[] = []
 
     try {
       webradioShows = await db.query<WebradioShow[]>('SELECT * FROM webradio_shows ORDER BY date DESC')
@@ -62,7 +62,7 @@ export default class Webradio {
   }
 
   async getWebradioShow(headers: IncomingHttpHeaders, showId: number, next: NextFunction): Promise<DataSuccess<{ show: WebradioShow }>> {
-    var webradioShow: WebradioShow
+    let webradioShow: WebradioShow
 
     try {
       webradioShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE id = ?', +showId))[0]
@@ -140,7 +140,7 @@ export default class Webradio {
       throw null
     }
 
-    var webradioShows: WebradioShow[] = []
+    let webradioShows: WebradioShow[] = []
 
     try {
       webradioShows = await db.query<WebradioShow[]>('SELECT * FROM webradio_shows ORDER BY date DESC')
@@ -166,7 +166,7 @@ export default class Webradio {
       throw null
     }
 
-    var webradioShow: WebradioShow
+    let webradioShow: WebradioShow
 
     try {
       webradioShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE id = ?', +showId))[0]
@@ -228,7 +228,7 @@ export default class Webradio {
       throw null
     }
 
-    var webradioShows: WebradioShow[] = []
+    let webradioShows: WebradioShow[] = []
 
     try {
       webradioShows = await db.query<WebradioShow[]>('SELECT * FROM webradio_shows ORDER BY date DESC')
@@ -248,7 +248,7 @@ export default class Webradio {
       throw null
     }
 
-    var webradioShow: WebradioShow
+    let webradioShow: WebradioShow
 
     try {
       webradioShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE id = ?', +showId))[0]
@@ -269,7 +269,7 @@ export default class Webradio {
       throw null
     }
 
-    var webradioShows: WebradioShow[] = []
+    let webradioShows: WebradioShow[] = []
 
     try {
       webradioShows = await db.query<WebradioShow[]>('SELECT * FROM webradio_shows ORDER BY date DESC')

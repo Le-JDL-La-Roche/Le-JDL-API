@@ -72,5 +72,113 @@ export default class EnvRouter implements Route {
         res.status(resp.httpStatus).send({ code: resp.code, message: resp.message })
       } catch (error) {}
     })
+
+    /**
+     * @openapi
+     * /journalists:
+     *   get:
+     *     tags:
+     *       - Environnement
+     *     summary: Get journalists
+     *     responses:
+     *       200:
+     *         description: Journalists
+     */
+    this.router.get('/journalists', async (req: Request, res: Response<DataHttpResponse<any>>, next: NextFunction) => {
+      try {
+        const resp = await new Env().getJournalists(next)
+        res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
+      } catch (error) {}
+    })
+
+    /**
+     * @openapi
+     * /journalists:
+     *   post:
+     *     tags:
+     *       - Environnement
+     *     security:
+     *       - bearer: []
+     *     summary: Post journalist
+     *     requestBody:
+     *       required: false
+     *       content:
+     *         application/x-www-form-urlencoded:
+     *           schema:
+     *             type: object
+     *             properties:
+     *               name:
+     *                 type: string
+     *               class:
+     *                 type: string
+     *     responses:
+     *       200:
+     *         description: Journalist posted
+     */
+    this.router.post('/journalists', async (req: Request, res: Response<DataHttpResponse<any>>, next: NextFunction) => {
+      try {
+        const resp = await new Env().postJournalist(req.headers, req.body, next)
+        res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
+      } catch (error) {}
+    })
+
+    /**
+     * @openapi
+     * /journalists/{journalist_id}:
+     *   put:
+     *     tags:
+     *       - Environnement
+     *     security:
+     *       - bearer: []
+     *     summary: Put a journalist by ID
+     *     parameters:
+     *       - in: path
+     *         name: journalist_id
+     *         required: true
+     *     requestBody:
+     *       required: false
+     *       content:
+     *         application/x-www-form-urlencoded:
+     *           schema:
+     *             type: object
+     *             properties:
+     *               name:
+     *                 type: string
+     *               class:
+     *                 type: string
+     *     responses:
+     *       200:
+     *         description: Journalist updated
+     */
+    this.router.put('/journalists/:journalist_id', async (req: Request, res: Response<DataHttpResponse<any>>, next: NextFunction) => {
+      try {
+        const resp = await new Env().putJournalist(req.headers, +req.params.journalist_id, req.body, next)
+        res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
+      } catch (error) {}
+    })
+
+    /**
+     * @openapi
+     * /journalists/{journalist_id}:
+     *   delete:
+     *     tags:
+     *       - Environnement
+     *     security:
+     *       - bearer: []
+     *     summary: Delete a journalist by ID
+     *     parameters:
+     *       - in: path
+     *         name: journalist_id
+     *         required: true
+     *     responses:
+     *       200:
+     *         description: Journalist deleted
+     */
+    this.router.delete('/journalists/:journalist_id', async (req: Request, res: Response<DataHttpResponse<any>>, next: NextFunction) => {
+      try {
+        const resp = await new Env().deleteJournalist(req.headers, +req.params.journalist_id, next)
+        res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
+      } catch (error) {}
+    })
   }
 }

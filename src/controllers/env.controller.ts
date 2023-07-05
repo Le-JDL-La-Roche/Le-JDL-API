@@ -7,17 +7,25 @@ import { DefaultSuccess } from '$responses/success/default-success.response'
 import nexter from '$utils/nexter'
 import { AuthService } from '$services/auth.service'
 import { IncomingHttpHeaders } from 'http'
+import { RequestException } from '$responses/exceptions/request-exception.response'
 
 export default class Env {
   async getEnv(next: NextFunction): Promise<DataSuccess<{ visits: Visits; shows: Shows; videos: Videos; articles: Articles }>> {
-    var visits: Visits = { total: 0, visits: [] }
-    var shows: Shows = { total: 0, status: { draft: 0, live: 0, waiting: 0, podcast: 0 } }
-    var videos: Videos = {
+    try {
+      await this.updateDb()
+    } catch (error) {
+      next(error)
+      throw null
+    }
+
+    let visits: Visits = { total: 0, visits: [] }
+    let shows: Shows = { total: 0, status: { draft: 0, live: 0, waiting: 0, podcast: 0 } }
+    let videos: Videos = {
       total: 0,
       category: { news: 0, culture: 0, sport: 0, science: 0, tech: 0, laroche: 0 },
       type: { youtube: 0, instagram: 0 }
     }
-    var articles: Articles = { total: 0, category: { news: 0, culture: 0, sport: 0, science: 0, tech: 0, laroche: 0 } }
+    let articles: Articles = { total: 0, category: { news: 0, culture: 0, sport: 0, science: 0, tech: 0, laroche: 0 } }
 
     try {
       visits.visits = await db.query('SELECT * FROM visits ORDER BY timestamp DESC')
@@ -81,46 +89,13 @@ export default class Env {
   }
 
   async updateVisits(next: NextFunction): Promise<DefaultSuccess> {
-    var visits: Visits['visits'] = []
+    let visits: Visits['visits'] = []
 
     try {
-      visits = await db.query('SELECT * FROM visits ORDER BY timestamp DESC')
+      visits = await this.updateDb()
     } catch (error) {
-      next(new DBException())
+      next(error)
       throw null
-    }
-
-    if (!visits[0]) {
-      visits.unshift({
-        id: 1,
-        timestamp: new Date(new Date().setHours(0, 0, 0, 0)).getTime() / 1000,
-        visits: 0
-      })
-
-      try {
-        await db.query('INSERT INTO visits (timestamp, visits) VALUES (?, 0)', new Date(new Date().setHours(0, 0, 0, 0)).getTime() / 1000)
-      } catch (error) {
-        next(new DBException())
-        console.log(error)
-        throw null
-      }
-    }
-
-    while (visits[0].timestamp - Date.now() / 1000 <= -86400) {
-      let t = visits[0].timestamp + 86400
-      visits.unshift({
-        id: visits[0].id + 1,
-        timestamp: t,
-        visits: 0
-      })
-
-      try {
-        await db.query('INSERT INTO visits (timestamp, visits) VALUES (?, 0)', t)
-      } catch (error) {
-        next(new DBException())
-        console.log(error)
-        throw null
-      }
     }
 
     try {
@@ -130,7 +105,6 @@ export default class Env {
       ])
     } catch (error) {
       next(new DBException())
-      console.log(error)
       throw null
     }
 
@@ -147,8 +121,6 @@ export default class Env {
 
     let tMin = timestamp - 3600
     let tMax = timestamp + 3600
-
-    console.log(tMin, tMax)
 
     let [visits]: Visits['visits'] = []
 
@@ -169,6 +141,178 @@ export default class Env {
     }
 
     return new DefaultSuccess(200, SUCCESS, 'Success')
+  }
+
+  private async updateDb() {
+    let visits: Visits['visits'] = []
+
+    try {
+      visits = await db.query('SELECT * FROM visits ORDER BY timestamp DESC')
+    } catch (error) {
+      throw new DBException(undefined, error)
+    }
+
+    if (!visits[0]) {
+      visits.unshift({
+        id: 1,
+        timestamp: new Date(new Date().setHours(0, 0, 0, 0)).getTime() / 1000,
+        visits: 0
+      })
+
+      try {
+        await db.query('INSERT INTO visits (timestamp, visits) VALUES (?, 0)', new Date(new Date().setHours(0, 0, 0, 0)).getTime() / 1000)
+      } catch (error) {
+        throw new DBException(undefined, error)
+      }
+    }
+
+    while (visits[0].timestamp - Date.now() / 1000 <= -86400) {
+      let t = visits[0].timestamp + 86400
+      visits.unshift({
+        id: visits[0].id + 1,
+        timestamp: t,
+        visits: 0
+      })
+
+      try {
+        await db.query('INSERT INTO visits (timestamp, visits) VALUES (?, 0)', t)
+      } catch (error) {
+        throw new DBException(undefined, error)
+      }
+    }
+
+    return visits
+  }
+
+  async getJournalists(next: NextFunction): Promise<DataSuccess<Journalist[]>> {
+    let journalists: Journalist[] = []
+
+    try {
+      journalists = await db.query<Journalist[]>('SELECT * FROM journalists')
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    return new DataSuccess(200, SUCCESS, 'Success', journalists)
+  }
+
+  async postJournalist(headers: IncomingHttpHeaders, body: Journalist, next: NextFunction): Promise<DataSuccess<Journalist[]>> {
+    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+
+    if (!auth.status) {
+      next(auth.exception)
+      throw null
+    }
+
+    if (!body.name || !body.class) {
+      next(new RequestException('Missing parameters'))
+      throw null
+    }
+
+    try {
+      await db.query('INSERT INTO journalists (name, class) VALUES (?, ?)', [body.name, body.class])
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    let journalists: Journalist[] = []
+
+    try {
+      journalists = await db.query<Journalist[]>('SELECT * FROM journalists')
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    return new DataSuccess(200, SUCCESS, 'Success', journalists)
+  }
+
+  async putJournalist(headers: IncomingHttpHeaders, journalistId: number, body: Journalist, next: NextFunction): Promise<DataSuccess<Journalist[]>> {
+    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+
+    if (!auth.status) {
+      next(auth.exception)
+      throw null
+    }
+
+    let journalist: Journalist
+
+    try {
+      journalist = (await db.query<Journalist[]>('SELECT * FROM journalists WHERE id = ?', journalistId))[0]
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    if (!journalist) {
+      next(new RequestException('Journalist not found'))
+      throw null
+    }
+
+    try {
+      await db.query('UPDATE journalists SET name = ?, class = ? WHERE id = ?', [
+        body.name || journalist.name,
+        body.class || journalist.class,
+        journalistId
+      ])
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    let journalists: Journalist[] = []
+
+    try {
+      journalists = await db.query<Journalist[]>('SELECT * FROM journalists')
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    return new DataSuccess(200, SUCCESS, 'Success', journalists)
+  }
+
+  async deleteJournalist(headers: IncomingHttpHeaders, journalistId: number, next: NextFunction): Promise<DataSuccess<Journalist[]>> {
+    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+
+    if (!auth.status) {
+      next(auth.exception)
+      throw null
+    }
+
+    let journalist: Journalist
+
+    try {
+      journalist = (await db.query<Journalist[]>('SELECT * FROM journalists WHERE id = ?', journalistId))[0]
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    if (!journalist) {
+      next(new RequestException('Journalist not found'))
+      throw null
+    }
+
+    try {
+      await db.query('DELETE FROM journalists WHERE id = ?', journalistId)
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    let journalists: Journalist[] = []
+
+    try {
+      journalists = await db.query<Journalist[]>('SELECT * FROM journalists')
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    return new DataSuccess(200, SUCCESS, 'Success', journalists)
   }
 }
 
@@ -217,4 +361,10 @@ interface Articles {
     tech: number
     laroche: number
   }
+}
+
+interface Journalist {
+  id?: number
+  name: string
+  class: string
 }
