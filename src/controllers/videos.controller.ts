@@ -22,7 +22,7 @@ export default class Videos {
       throw null
     }
 
-    return new DataSuccess(200, SUCCESS, 'Success', { videos: videos })
+    return new DataSuccess(200, SUCCESS, 'Success', { videos })
   }
 
   async getVideo(videoId: number, next: NextFunction): Promise<DataSuccess<{ video: Video }>> {
@@ -40,7 +40,7 @@ export default class Videos {
       throw null
     }
 
-    return new DataSuccess(200, SUCCESS, 'Success', { video: video })
+    return new DataSuccess(200, SUCCESS, 'Success', { video })
   }
 
   async postVideo(
@@ -91,7 +91,7 @@ export default class Videos {
       throw null
     }
 
-    return new DataSuccess(200, SUCCESS, 'Success', { videos: videos })
+    return new DataSuccess(200, SUCCESS, 'Success', { videos })
   }
 
   async putVideo(
@@ -166,7 +166,7 @@ export default class Videos {
       throw null
     }
 
-    return new DataSuccess(200, SUCCESS, 'Success', { videos: videos })
+    return new DataSuccess(200, SUCCESS, 'Success', { videos })
   }
 
   async deleteVideo(headers: IncomingHttpHeaders, videoId: number, next: NextFunction): Promise<DataSuccess<{ videos: Video[] }>> {
@@ -207,6 +207,6 @@ export default class Videos {
       throw null
     }
 
-    return new DataSuccess(200, SUCCESS, 'Success', { videos: videos })
+    return new DataSuccess(200, SUCCESS, 'Success', { videos })
   }
 }

@@ -22,7 +22,7 @@ export default class Articles {
       throw null
     }
 
-    return new DataSuccess(200, SUCCESS, 'Success', { articles: articles })
+    return new DataSuccess(200, SUCCESS, 'Success', { articles })
   }
 
   async getArticle(articleId: number, next: NextFunction): Promise<DataSuccess<{ article: Article }>> {
@@ -47,7 +47,7 @@ export default class Articles {
       throw null
     }
 
-    return new DataSuccess(200, SUCCESS, 'Success', { article: article })
+    return new DataSuccess(200, SUCCESS, 'Success', { article })
   }
 
   async postArticle(
@@ -97,7 +97,7 @@ export default class Articles {
       throw null
     }
 
-    return new DataSuccess(200, SUCCESS, 'Success', { articles: articles })
+    return new DataSuccess(200, SUCCESS, 'Success', { articles })
   }
 
   async putArticle(
@@ -167,7 +167,7 @@ export default class Articles {
       throw null
     }
 
-    return new DataSuccess(200, SUCCESS, 'Success', { articles: articles })
+    return new DataSuccess(200, SUCCESS, 'Success', { articles })
   }
 
   async deleteArticle(headers: IncomingHttpHeaders, articleId: number, next: NextFunction): Promise<DataSuccess<{ articles: Article[] }>> {
@@ -208,6 +208,6 @@ export default class Articles {
       throw null
     }
 
-    return new DataSuccess(200, SUCCESS, 'Success', { articles: articles })
+    return new DataSuccess(200, SUCCESS, 'Success', { articles })
   }
 }

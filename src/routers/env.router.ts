@@ -4,6 +4,7 @@ import { Request, Response } from 'express'
 import Env from '$controllers/env.controller'
 import { DataHttpResponse } from '$models/responses/http/data-http-response.model'
 import { DefaultHttpResponse } from '$models/responses/http/default-http-response.model'
+import { Journalist } from '$models/features/journalist.model'
 
 export default class EnvRouter implements Route {
   router = Router()
@@ -84,7 +85,7 @@ export default class EnvRouter implements Route {
      *       200:
      *         description: Journalists
      */
-    this.router.get('/journalists', async (req: Request, res: Response<DataHttpResponse<any>>, next: NextFunction) => {
+    this.router.get('/journalists', async (req: Request, res: Response<DataHttpResponse<{ journalists: Journalist[] }>>, next: NextFunction) => {
       try {
         const resp = await new Env().getJournalists(next)
         res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
@@ -115,7 +116,7 @@ export default class EnvRouter implements Route {
      *       200:
      *         description: Journalist posted
      */
-    this.router.post('/journalists', async (req: Request, res: Response<DataHttpResponse<any>>, next: NextFunction) => {
+    this.router.post('/journalists', async (req: Request, res: Response<DataHttpResponse<{ journalists: Journalist[] }>>, next: NextFunction) => {
       try {
         const resp = await new Env().postJournalist(req.headers, req.body, next)
         res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
@@ -150,12 +151,15 @@ export default class EnvRouter implements Route {
      *       200:
      *         description: Journalist updated
      */
-    this.router.put('/journalists/:journalist_id', async (req: Request, res: Response<DataHttpResponse<any>>, next: NextFunction) => {
-      try {
-        const resp = await new Env().putJournalist(req.headers, +req.params.journalist_id, req.body, next)
-        res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
-      } catch (error) {}
-    })
+    this.router.put(
+      '/journalists/:journalist_id',
+      async (req: Request, res: Response<DataHttpResponse<{ journalists: Journalist[] }>>, next: NextFunction) => {
+        try {
+          const resp = await new Env().putJournalist(req.headers, +req.params.journalist_id, req.body, next)
+          res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
+        } catch (error) {}
+      }
+    )
 
     /**
      * @openapi
@@ -174,11 +178,14 @@ export default class EnvRouter implements Route {
      *       200:
      *         description: Journalist deleted
      */
-    this.router.delete('/journalists/:journalist_id', async (req: Request, res: Response<DataHttpResponse<any>>, next: NextFunction) => {
-      try {
-        const resp = await new Env().deleteJournalist(req.headers, +req.params.journalist_id, next)
-        res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
-      } catch (error) {}
-    })
+    this.router.delete(
+      '/journalists/:journalist_id',
+      async (req: Request, res: Response<DataHttpResponse<{ journalists: Journalist[] }>>, next: NextFunction) => {
+        try {
+          const resp = await new Env().deleteJournalist(req.headers, +req.params.journalist_id, next)
+          res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
+        } catch (error) {}
+      }
+    )
   }
 }
