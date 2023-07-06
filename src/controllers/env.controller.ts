@@ -8,6 +8,7 @@ import nexter from '$utils/nexter'
 import { AuthService } from '$services/auth.service'
 import { IncomingHttpHeaders } from 'http'
 import { RequestException } from '$responses/exceptions/request-exception.response'
+import { Journalist } from '$models/features/journalist.model'
 
 export default class Env {
   async getEnv(next: NextFunction): Promise<DataSuccess<{ visits: Visits; shows: Shows; videos: Videos; articles: Articles }>> {
@@ -184,7 +185,7 @@ export default class Env {
     return visits
   }
 
-  async getJournalists(next: NextFunction): Promise<DataSuccess<Journalist[]>> {
+  async getJournalists(next: NextFunction): Promise<DataSuccess<{ journalists: Journalist[] }>> {
     let journalists: Journalist[] = []
 
     try {
@@ -194,10 +195,10 @@ export default class Env {
       throw null
     }
 
-    return new DataSuccess(200, SUCCESS, 'Success', journalists)
+    return new DataSuccess(200, SUCCESS, 'Success', { journalists })
   }
 
-  async postJournalist(headers: IncomingHttpHeaders, body: Journalist, next: NextFunction): Promise<DataSuccess<Journalist[]>> {
+  async postJournalist(headers: IncomingHttpHeaders, body: Journalist, next: NextFunction): Promise<DataSuccess<{ journalists: Journalist[] }>> {
     const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
 
     if (!auth.status) {
@@ -226,10 +227,15 @@ export default class Env {
       throw null
     }
 
-    return new DataSuccess(200, SUCCESS, 'Success', journalists)
+    return new DataSuccess(200, SUCCESS, 'Success', { journalists })
   }
 
-  async putJournalist(headers: IncomingHttpHeaders, journalistId: number, body: Journalist, next: NextFunction): Promise<DataSuccess<Journalist[]>> {
+  async putJournalist(
+    headers: IncomingHttpHeaders,
+    journalistId: number,
+    body: Journalist,
+    next: NextFunction
+  ): Promise<DataSuccess<{ journalists: Journalist[] }>> {
     const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
 
     if (!auth.status) {
@@ -271,10 +277,14 @@ export default class Env {
       throw null
     }
 
-    return new DataSuccess(200, SUCCESS, 'Success', journalists)
+    return new DataSuccess(200, SUCCESS, 'Success', { journalists })
   }
 
-  async deleteJournalist(headers: IncomingHttpHeaders, journalistId: number, next: NextFunction): Promise<DataSuccess<Journalist[]>> {
+  async deleteJournalist(
+    headers: IncomingHttpHeaders,
+    journalistId: number,
+    next: NextFunction
+  ): Promise<DataSuccess<{ journalists: Journalist[] }>> {
     const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
 
     if (!auth.status) {
@@ -312,7 +322,7 @@ export default class Env {
       throw null
     }
 
-    return new DataSuccess(200, SUCCESS, 'Success', journalists)
+    return new DataSuccess(200, SUCCESS, 'Success', { journalists })
   }
 }
 
@@ -361,10 +371,4 @@ interface Articles {
     tech: number
     laroche: number
   }
-}
-
-interface Journalist {
-  id?: number
-  name: string
-  class: string
 }
