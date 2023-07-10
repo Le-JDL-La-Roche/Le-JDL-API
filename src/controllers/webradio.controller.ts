@@ -298,7 +298,7 @@ export default class Webradio {
     let webradioShowQuestions: WebradioQuestion[] = []
 
     try {
-      webradioShowQuestions = await db.query<WebradioQuestion[]>('SELECT * FROM show_questions WHERE show_id = ?', +webradioShow.id)
+      webradioShowQuestions = await db.query<WebradioQuestion[]>('SELECT * FROM webradio_shows_questions WHERE show_id = ?', +webradioShow.id)
     } catch (error) {
       next(new DBException(undefined, error))
       throw null
@@ -308,7 +308,6 @@ export default class Webradio {
   }
 
   async postQuestion(body: WebradioQuestion, next: NextFunction): Promise<DataSuccess<{ questions: WebradioQuestion[] }>> {
-    // check if body.question is not empty or not contains only spaces
     if (!body.question || !body.question.replace(/\s/g, '').length) {
       next(new RequestException('Invalid parameters'))
       throw null
@@ -328,7 +327,7 @@ export default class Webradio {
     }
 
     try {
-      await db.query('INSERT INTO show_questions (show_id, question, date) VALUES (?, ?, ?)', [
+      await db.query('INSERT INTO webradio_shows_questions (show_id, question, date) VALUES (?, ?, ?)', [
         +webradioShow.id,
         body.question,
         Math.round(Date.now() / 1000)
@@ -341,7 +340,7 @@ export default class Webradio {
     let webradioShowQuestions: WebradioQuestion[] = []
 
     try {
-      webradioShowQuestions = await db.query<WebradioQuestion[]>('SELECT * FROM show_questions WHERE show_id = ?', +webradioShow.id)
+      webradioShowQuestions = await db.query<WebradioQuestion[]>('SELECT * FROM webradio_shows_questions WHERE show_id = ?', +webradioShow.id)
     } catch (error) {
       next(new DBException(undefined, error))
       throw null
@@ -350,9 +349,20 @@ export default class Webradio {
     return new DataSuccess(200, SUCCESS, 'Success', { questions: webradioShowQuestions })
   }
 
-  async deleteQuestion(questionId: number, next: NextFunction): Promise<DataSuccess<{ questions: WebradioQuestion[] }>> {
+  async deleteQuestion(
+    headers: IncomingHttpHeaders,
+    questionId: number,
+    next: NextFunction
+  ): Promise<DataSuccess<{ questions: WebradioQuestion[] }>> {
+    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+
+    if (!auth.status) {
+      next(auth.exception)
+      throw null
+    }
+
     try {
-      await db.query('DELETE FROM show_questions WHERE id = ?', +questionId)
+      await db.query('DELETE FROM webradio_shows_questions WHERE id = ?', +questionId)
     } catch (error) {
       next(new DBException(undefined, error))
       throw null
@@ -361,7 +371,7 @@ export default class Webradio {
     let webradioShowQuestions: WebradioQuestion[] = []
 
     try {
-      webradioShowQuestions = await db.query<WebradioQuestion[]>('SELECT * FROM show_questions WHERE id = ?', questionId)
+      webradioShowQuestions = await db.query<WebradioQuestion[]>('SELECT * FROM webradio_shows_questions WHERE id = ?', questionId)
     } catch (error) {
       next(new DBException(undefined, error))
       throw null
