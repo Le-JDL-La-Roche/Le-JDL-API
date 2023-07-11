@@ -1,14 +1,14 @@
 import db from '$utils/database'
-import { SUCCESS, count } from '$models/types'
+import { SUCCESS } from '$models/types'
 import { DataSuccess } from '$responses/success/data-success.response'
 import { NextFunction } from 'express'
 import { DBException } from '$responses/exceptions/db-exception.response'
-import { DefaultSuccess } from '$responses/success/default-success.response'
 import { WebradioShow } from '$models/features/webradio-show.model'
 import { IncomingHttpHeaders } from 'http'
 import nexter from '$utils/nexter'
 import { AuthService } from '$services/auth.service'
 import { RequestException } from '$responses/exceptions/request-exception.response'
+import { WebradioQuestion } from '$models/features/webradio-question.model'
 
 export default class Webradio {
   async getPublishedWebradioShows(next: NextFunction): Promise<DataSuccess<{ shows: WebradioShow[] }>> {
@@ -279,5 +279,104 @@ export default class Webradio {
     }
 
     return new DataSuccess(200, SUCCESS, 'Success', { shows: webradioShows })
+  }
+
+  async getCurrentShowQuestions(next: NextFunction): Promise<DataSuccess<{ questions: WebradioQuestion[] }>> {
+    let webradioShow: WebradioShow
+
+    try {
+      webradioShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = 0'))[0]
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    if (!webradioShow || !webradioShow.id) {
+      return new DataSuccess(200, SUCCESS, 'No show', { questions: [] })
+    }
+
+    let webradioShowQuestions: WebradioQuestion[] = []
+
+    try {
+      webradioShowQuestions = await db.query<WebradioQuestion[]>('SELECT * FROM webradio_shows_questions WHERE show_id = ?', +webradioShow.id)
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    return new DataSuccess(200, SUCCESS, 'Success', { questions: webradioShowQuestions })
+  }
+
+  async postQuestion(body: WebradioQuestion, next: NextFunction): Promise<DataSuccess<{ questions: WebradioQuestion[] }>> {
+    if (!body.question || !body.question.replace(/\s/g, '').length) {
+      next(new RequestException('Invalid parameters'))
+      throw null
+    }
+
+    let webradioShow: WebradioShow
+
+    try {
+      webradioShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = 0'))[0]
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    if (!webradioShow || !webradioShow.id) {
+      return new DataSuccess(200, SUCCESS, 'No show', { questions: [] })
+    }
+
+    try {
+      await db.query('INSERT INTO webradio_shows_questions (show_id, question, date) VALUES (?, ?, ?)', [
+        +webradioShow.id,
+        body.question,
+        Math.round(Date.now() / 1000)
+      ])
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    let webradioShowQuestions: WebradioQuestion[] = []
+
+    try {
+      webradioShowQuestions = await db.query<WebradioQuestion[]>('SELECT * FROM webradio_shows_questions WHERE show_id = ?', +webradioShow.id)
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    return new DataSuccess(200, SUCCESS, 'Success', { questions: webradioShowQuestions })
+  }
+
+  async deleteQuestion(
+    headers: IncomingHttpHeaders,
+    questionId: number,
+    next: NextFunction
+  ): Promise<DataSuccess<{ questions: WebradioQuestion[] }>> {
+    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+
+    if (!auth.status) {
+      next(auth.exception)
+      throw null
+    }
+
+    try {
+      await db.query('DELETE FROM webradio_shows_questions WHERE id = ?', +questionId)
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    let webradioShowQuestions: WebradioQuestion[] = []
+
+    try {
+      webradioShowQuestions = await db.query<WebradioQuestion[]>('SELECT * FROM webradio_shows_questions WHERE id = ?', questionId)
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    return new DataSuccess(200, SUCCESS, 'Success', { questions: webradioShowQuestions })
   }
 }

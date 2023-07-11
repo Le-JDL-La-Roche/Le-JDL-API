@@ -12,7 +12,7 @@ import cors from 'cors'
 export default class App {
   private expressApp = express()
   private httpServer = createServer(this.expressApp)
-  private ioServer = new Server(this.httpServer)
+  private ioServer = new Server(this.httpServer, { cors: { origin: '*' } })
   private port = 3000
 
   constructor(routers: Route[], sockets: IO[]) {
@@ -48,7 +48,7 @@ export default class App {
 
   private initIOs(ios: IO[]) {
     ios.forEach((io) => {
-      this.ioServer.on('connection', io.socket)
+      this.ioServer.on('connection', (socket) => io.socket(socket, this.ioServer))
     })
   }
 }

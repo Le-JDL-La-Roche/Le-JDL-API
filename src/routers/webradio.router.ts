@@ -11,6 +11,7 @@ import { FilesService } from '$services/files.service'
 import nexter from '$utils/nexter'
 import { AuthService } from '$services/auth.service'
 import { AUTH_ERROR, CLIENT_ERROR } from '$models/types'
+import { WebradioQuestion } from '$models/features/webradio-question.model'
 
 export default class WebradioRouter implements Route {
   router = Router()
@@ -228,6 +229,96 @@ export default class WebradioRouter implements Route {
         try {
           const resp = await new Webradio().deleteWebradioShow(req.headers, +req.params.id, next)
           res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
+        } catch (error) {}
+      }
+    )
+
+    /**
+     * @openapi
+     * /webradio/questions/current:
+     *   get:
+     *     tags:
+     *       - Webradio
+     *     summary: Get current show questions
+     *     responses:
+     *       200:
+     *         description: Questions
+     */
+    this.router.get(
+      `${this.path}/questions/current`,
+      async (req: Request, res: Response<DataHttpResponse<{ questions: WebradioQuestion[] }>>, next: NextFunction) => {
+        try {
+          const resp = await new Webradio().getCurrentShowQuestions(next)
+          if (resp.data) {
+            res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
+          } else {
+            res.status(resp.httpStatus).send({ code: resp.code, message: resp.message })
+          }
+        } catch (error) {}
+      }
+    )
+
+    /**
+     * @openapi
+     * /webradio/questions:
+     *   post:
+     *     tags:
+     *       - Webradio
+     *     summary: Post a question
+     *     requestBody:
+     *       required: false
+     *       content:
+     *         application/x-www-form-urlencoded:
+     *           schema:
+     *             type: object
+     *             properties:
+     *               question:
+     *                 type: string
+     *     responses:
+     *       200:
+     *         description: Question posted
+     */
+    this.router.post(
+      `${this.path}/questions`,
+      async (req: Request, res: Response<DataHttpResponse<{ questions: WebradioQuestion[] }>>, next: NextFunction) => {
+        try {
+          const resp = await new Webradio().postQuestion(req.body, next)
+          if (resp.data) {
+            res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
+          } else {
+            res.status(resp.httpStatus).send({ code: resp.code, message: resp.message })
+          }
+        } catch (error) {}
+      }
+    )
+
+    /**
+     * @openapi
+     * /webradio/questions/{question_id}:
+     *   delete:
+     *     tags:
+     *       - Webradio
+     *     security:
+     *       - bearer: []
+     *     summary: Delete question by ID
+     *     parameters:
+     *       - in: path
+     *         name: question_id
+     *         required: true
+     *     responses:
+     *       200:
+     *         description: Question deleted
+     */
+    this.router.delete(
+      `${this.path}/questions/:id`,
+      async (req: Request, res: Response<DataHttpResponse<{ questions: WebradioQuestion[] }>>, next: NextFunction) => {
+        try {
+          const resp = await new Webradio().deleteQuestion(req.headers, +req.params.id, next)
+          if (resp.data) {
+            res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
+          } else {
+            res.status(resp.httpStatus).send({ code: resp.code, message: resp.message })
+          }
         } catch (error) {}
       }
     )
