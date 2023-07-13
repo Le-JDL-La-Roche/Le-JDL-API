@@ -313,6 +313,8 @@ export default class Webradio {
       throw null
     }
 
+    body.question = body.question.trim()
+
     let webradioShow: WebradioShow
 
     try {

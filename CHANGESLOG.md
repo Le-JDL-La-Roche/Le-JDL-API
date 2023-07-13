@@ -3,6 +3,7 @@
 ### 1<sup>er</sup> septembre 2023 `v2.0.0`
 - Migration vers Node.js avec Express.js (PHP -> Node.js)
 - Mise en place de Socket.io
+- Amélioration du système de direct Webradio
 - Optimisation du code
 - *Open source*
 
