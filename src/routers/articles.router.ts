@@ -22,14 +22,34 @@ export default class ArticlesRouter implements Route {
      *   get:
      *     tags:
      *       - Articles
-     *     summary: Get articles
+     *     summary: Get published articles
      *     responses:
      *       200:
      *         description: Articles
      */
     this.router.get(`${this.path}`, async (req: Request, res: Response<DataHttpResponse<{ articles: Article[] }>>, next: NextFunction) => {
       try {
-        const resp = await new Articles().getArticles(next)
+        const resp = await new Articles().getPublishedArticles(next)
+        res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
+      } catch (error) {}
+    })
+
+    /**
+     * @openapi
+     * /articles/all:
+     *   get:
+     *     tags:
+     *       - Articles
+     *     security:
+     *       - bearer: []
+     *     summary: Get all articles
+     *     responses:
+     *       200:
+     *         description: Articles
+     */
+    this.router.get(`${this.path}/all`, async (req: Request, res: Response<DataHttpResponse<{ articles: Article[] }>>, next: NextFunction) => {
+      try {
+        const resp = await new Articles().getAllArticles(req.headers, next)
         res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
       } catch (error) {}
     })
@@ -40,6 +60,8 @@ export default class ArticlesRouter implements Route {
      *   get:
      *     tags:
      *       - Articles
+     *     security:
+     *       - bearer: []
      *     summary: Get article by ID
      *     parameters:
      *       - in: path
@@ -51,7 +73,7 @@ export default class ArticlesRouter implements Route {
      */
     this.router.get(`${this.path}/:id`, async (req: Request, res: Response<DataHttpResponse<{ article: Article }>>, next: NextFunction) => {
       try {
-        const resp = await new Articles().getArticle(+req.params.id, next)
+        const resp = await new Articles().getArticle(req.headers, +req.params.id, next)
         res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
       } catch (error) {}
     })
@@ -82,6 +104,8 @@ export default class ArticlesRouter implements Route {
      *                 type: string
      *               author:
      *                 type: string
+     *               status:
+     *                 type: number
      *               thumbnail:
      *                 type: file
      *     responses:
@@ -129,6 +153,8 @@ export default class ArticlesRouter implements Route {
      *                 type: string
      *               author:
      *                 type: string
+     *               status:
+     *                 type: number
      *               thumbnail:
      *                 type: file
      *     responses:
