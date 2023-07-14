@@ -21,14 +21,34 @@ export default class VideosRouter implements Route {
      *   get:
      *     tags:
      *       - Videos
-     *     summary: Get videos
+     *     summary: Get published videos
      *     responses:
      *       200:
      *         description: Videos
      */
     this.router.get(`${this.path}`, async (req: Request, res: Response<DataHttpResponse<{ videos: Video[] }>>, next: NextFunction) => {
       try {
-        const resp = await new Videos().getVideos(next)
+        const resp = await new Videos().getPublishedVideos(next)
+        res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
+      } catch (error) {}
+    })
+
+    /**
+     * @openapi
+     * /videos/all:
+     *   get:
+     *     tags:
+     *       - Videos
+     *     security:
+     *       - bearer: []
+     *     summary: Get all videos
+     *     responses:
+     *       200:
+     *         description: Videos
+     */
+    this.router.get(`${this.path}/all`, async (req: Request, res: Response<DataHttpResponse<{ videos: Video[] }>>, next: NextFunction) => {
+      try {
+        const resp = await new Videos().getAllVideos(req.headers, next)
         res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
       } catch (error) {}
     })
@@ -39,6 +59,8 @@ export default class VideosRouter implements Route {
      *   get:
      *     tags:
      *       - Videos
+     *     security:
+     *       - bearer: []
      *     summary: Get video by ID
      *     parameters:
      *       - in: path
@@ -50,7 +72,7 @@ export default class VideosRouter implements Route {
      */
     this.router.get(`${this.path}/:id`, async (req: Request, res: Response<DataHttpResponse<{ video: Video }>>, next: NextFunction) => {
       try {
-        const resp = await new Videos().getVideo(+req.params.id, next)
+        const resp = await new Videos().getVideo(req.headers, +req.params.id, next)
         res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
       } catch (error) {}
     })
@@ -83,6 +105,8 @@ export default class VideosRouter implements Route {
      *                 type: string
      *               author:
      *                 type: string
+     *               status:
+     *                 type: number
      *               thumbnail:
      *                 type: file
      *     responses:
@@ -132,6 +156,8 @@ export default class VideosRouter implements Route {
      *                 type: string
      *               author:
      *                 type: string
+     *               status:
+     *                 type: number
      *               thumbnail:
      *                 type: file
      *     responses:
