@@ -8,7 +8,7 @@ import nexter from '$utils/nexter'
 import { AuthService } from '$services/auth.service'
 import { IncomingHttpHeaders } from 'http'
 import { RequestException } from '$responses/exceptions/request-exception.response'
-import { Journalist } from '$models/features/journalist.model'
+import { Journalist } from '$models/data/journalist.model'
 
 export default class Env {
   async getEnv(next: NextFunction): Promise<DataSuccess<{ visits: Visits; shows: Shows; videos: Videos; articles: Articles }>> {

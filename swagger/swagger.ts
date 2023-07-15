@@ -5,7 +5,7 @@ const options: swaggerJSDoc.OAS3Options = {
     openapi: '3.0.0',
     info: {
       title: 'Le JDL API',
-      version: '1.0.0',
+      version: '2.0.0',
       description: 'API du Blog du JDL',
       license: {
         name: 'GPL-3.0-or-later'
@@ -29,7 +29,7 @@ const options: swaggerJSDoc.OAS3Options = {
         }
       }
     },
-    tags: [{ name: 'Auth' }, { name: 'Environnement' }, { name: 'Webradio' }, { name: 'Videos' }, { name: 'Articles' }]
+    tags: [{ name: 'Auth' }, { name: 'Environnement' }, { name: 'Webradio' }, { name: 'Videos' }, { name: 'Articles' }, { name: 'Authorizations' }]
   },
   apis: ['./src/routers/**/*.ts']
 }
