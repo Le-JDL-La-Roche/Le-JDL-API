@@ -71,5 +71,66 @@ export default class AuthorizationsRouter implements Route {
         res.status(resp.httpStatus).send({ code: resp.code, message: resp.message })
       } catch (error) {}
     })
+
+    /**
+     * @openapi
+     * /authorizations/{authorization_id}:
+     *   put:
+     *     tags:
+     *       - Authorizations
+     *     security:
+     *       - bearer: []
+     *     summary: Put an authorization
+     *     parameters:
+     *       - in: path
+     *         name: authorization_id
+     *         required: true
+     *     requestBody:
+     *       required: false
+     *       content:
+     *         application/x-www-form-urlencoded:
+     *           schema:
+     *             type: object
+     *             properties:
+     *               element_type:
+     *                 type: string
+     *               element_id:
+     *                 type: number
+     *               content:
+     *                 type: string
+     *     responses:
+     *       200:
+     *         description: Authorization updated
+     */
+    this.router.put(`${this.path}/:id`, async (req: Request, res: Response<DefaultHttpResponse>, next: NextFunction) => {
+      try {
+        const resp = await new Authorizations().putAuthorization(req.headers, +req.params.id, req.body, next)
+        res.status(resp.httpStatus).send({ code: resp.code, message: resp.message })
+      } catch (error) {}
+    })
+
+    /**
+     * @openapi
+     * /authorizations/{authorization_id}:
+     *   delete:
+     *     tags:
+     *       - Authorizations
+     *     security:
+     *       - bearer: []
+     *     summary: Delete an authorization
+     *     parameters:
+     *       - in: path
+     *         name: authorization_id
+     *         required: true
+     *     responses:
+     *       200:
+     *         description: Authorization deleted
+     */
+    this.router.delete(`${this.path}/:id`, async (req: Request, res: Response<DefaultHttpResponse>, next: NextFunction) => {
+      try {
+        const resp = await new Authorizations().deleteAuthorization(req.headers, +req.params.id, next)
+        res.status(resp.httpStatus).send({ code: resp.code, message: resp.message })
+      } catch (error) {}
+    })
   }
 }
