@@ -11,7 +11,31 @@ import { ArticleAuthorization, Authorization, GuestAuthorization, VideoAuthoriza
 import { RequestException } from '$responses/exceptions/request-exception.response'
 
 export default class Authorizations {
-  async getAuthorization(headers: IncomingHttpHeaders, authorizationId: number, next: NextFunction): Promise<DataSuccess<Authorization>> {
+  async getAuthorizations(headers: IncomingHttpHeaders, next: NextFunction): Promise<DataSuccess<{ authorizations: Authorization[] }>> {
+    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+
+    if (!auth.status) {
+      next(auth.exception)
+      throw null
+    }
+
+    let authorizations: Authorization[] = []
+
+    try {
+      authorizations = await db.query<Authorization[]>('SELECT * FROM authorizations')
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    return new DataSuccess(200, SUCCESS, 'Success', { authorizations })
+  }
+
+  async getAuthorization(
+    headers: IncomingHttpHeaders,
+    authorizationId: number,
+    next: NextFunction
+  ): Promise<DataSuccess<{ authorization: Authorization }>> {
     const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
 
     if (!auth.status) {
@@ -33,7 +57,7 @@ export default class Authorizations {
       throw null
     }
 
-    return new DataSuccess(200, SUCCESS, 'Success', authorization)
+    return new DataSuccess(200, SUCCESS, 'Success', { authorization })
   }
 
   async postAuthorization(

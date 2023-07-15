@@ -17,6 +17,29 @@ export default class AuthorizationsRouter implements Route {
   private init() {
     /**
      * @openapi
+     * /authorizations:
+     *   get:
+     *     tags:
+     *       - Authorizations
+     *     security:
+     *       - bearer: []
+     *     summary: Get authorizations
+     *     responses:
+     *       200:
+     *         description: Authorizations
+     */
+    this.router.get(
+      `${this.path}`,
+      async (req: Request, res: Response<DataHttpResponse<{ authorizations: Authorization[] }>>, next: NextFunction) => {
+        try {
+          const resp = await new Authorizations().getAuthorizations(req.headers, next)
+          res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
+        } catch (error) {}
+      }
+    )
+
+    /**
+     * @openapi
      * /authorizations/{authorization_id}:
      *   get:
      *     tags:
@@ -30,14 +53,17 @@ export default class AuthorizationsRouter implements Route {
      *         required: true
      *     responses:
      *       200:
-     *         description: Videos
+     *         description: Authorization
      */
-    this.router.get(`${this.path}/:id`, async (req: Request, res: Response<DataHttpResponse<Authorization>>, next: NextFunction) => {
-      try {
-        const resp = await new Authorizations().getAuthorization(req.headers, +req.params.id, next)
-        res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
-      } catch (error) {}
-    })
+    this.router.get(
+      `${this.path}/:id`,
+      async (req: Request, res: Response<DataHttpResponse<{ authorization: Authorization }>>, next: NextFunction) => {
+        try {
+          const resp = await new Authorizations().getAuthorization(req.headers, +req.params.id, next)
+          res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
+        } catch (error) {}
+      }
+    )
 
     /**
      * @openapi
@@ -65,7 +91,7 @@ export default class AuthorizationsRouter implements Route {
      *       200:
      *         description: Authorization posted
      */
-    this.router.post(`${this.path}`, async (req: Request, res: Response<DataHttpResponse<{authorization: Authorization}>>, next: NextFunction) => {
+    this.router.post(`${this.path}`, async (req: Request, res: Response<DataHttpResponse<{ authorization: Authorization }>>, next: NextFunction) => {
       try {
         const resp = await new Authorizations().postAuthorization(req.headers, req.body, next)
         res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
@@ -102,12 +128,15 @@ export default class AuthorizationsRouter implements Route {
      *       200:
      *         description: Authorization updated
      */
-    this.router.put(`${this.path}/:id`, async (req: Request, res: Response<DataHttpResponse<{authorization: Authorization}>>, next: NextFunction) => {
-      try {
-        const resp = await new Authorizations().putAuthorization(req.headers, +req.params.id, req.body, next)
-        res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
-      } catch (error) {}
-    })
+    this.router.put(
+      `${this.path}/:id`,
+      async (req: Request, res: Response<DataHttpResponse<{ authorization: Authorization }>>, next: NextFunction) => {
+        try {
+          const resp = await new Authorizations().putAuthorization(req.headers, +req.params.id, req.body, next)
+          res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
+        } catch (error) {}
+      }
+    )
 
     /**
      * @openapi
