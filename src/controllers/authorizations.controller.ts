@@ -58,11 +58,18 @@ export default class Authorizations {
       throw null
     }
 
+    try {
+      await this.checkElement(body)
+    } catch (error) {
+      next(error)
+      throw null
+    }
+
     let authorization: count
 
     try {
       authorization = (
-        await db.query<count[]>('SELECT COUNT(*) as count FROM authorizations WHERE element_type = ? AND element_id = ?', [
+        await db.query<count[]>('SELECT COUNT(*) AS count FROM authorizations WHERE element_type = ? AND element_id = ?', [
           body.elementType,
           body.elementId
         ])
@@ -78,9 +85,9 @@ export default class Authorizations {
     }
 
     try {
-      await db.query('INSERT INTO authorizations (element_type, element_id, content) SET (?, ?, ?)', [
+      await db.query('INSERT INTO authorizations (element_type, element_id, content) VALUES (?, ?, ?)', [
         body.elementType,
-        body.elementId,
+        +body.elementId,
         body.content as string
       ])
     } catch (error) {
@@ -119,12 +126,20 @@ export default class Authorizations {
     }
 
     if (
-      !body.elementId ||
-      (body.elementType !== 'show' && body.elementType !== 'video' && body.elementType !== 'article' && body.elementType !== 'guest') ||
-      !body.content ||
-      typeof body.content !== 'string'
+      body.elementType &&
+      body.elementType !== 'show' &&
+      body.elementType !== 'video' &&
+      body.elementType !== 'article' &&
+      body.elementType !== 'guest'
     ) {
       next(new RequestException('Invalid parameters'))
+      throw null
+    }
+
+    try {
+      await this.checkElement(body)
+    } catch (error) {
+      next(error)
       throw null
     }
 
@@ -179,5 +194,45 @@ export default class Authorizations {
     }
 
     return new DefaultSuccess(200, SUCCESS, 'Success')
+  }
+
+  private async checkElement(body: Authorization): Promise<void> {
+    if (body.elementType === 'show') {
+      let show: count
+
+      try {
+        show = (await db.query<count[]>('SELECT COUNT(*) AS count FROM webradio_shows WHERE id = ?', body.elementId))[0]
+      } catch (error) {
+        throw new DBException(undefined, error)
+      }
+
+      if (show.count === 0) {
+        throw new RequestException('Show not found')
+      }
+    } else if (body.elementType === 'video') {
+      let video: count
+
+      try {
+        video = (await db.query<count[]>('SELECT COUNT(*) AS count FROM videos WHERE id = ?', body.elementId))[0]
+      } catch (error) {
+        throw new DBException(undefined, error)
+      }
+
+      if (video.count === 0) {
+        throw new RequestException('Video not found')
+      }
+    } else if (body.elementType === 'article') {
+      let article: count
+
+      try {
+        article = (await db.query<count[]>('SELECT COUNT(*) AS count FROM articles WHERE id = ?', body.elementId))[0]
+      } catch (error) {
+        throw new DBException(undefined, error)
+      }
+
+      if (article.count === 0) {
+        throw new RequestException('Article not found')
+      }
+    }
   }
 }

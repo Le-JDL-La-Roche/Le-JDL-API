@@ -55,9 +55,9 @@ export default class AuthorizationsRouter implements Route {
      *           schema:
      *             type: object
      *             properties:
-     *               element_type:
+     *               elementType:
      *                 type: string
-     *               element_id:
+     *               elementId:
      *                 type: number
      *               content:
      *                 type: string
@@ -65,10 +65,10 @@ export default class AuthorizationsRouter implements Route {
      *       200:
      *         description: Authorization posted
      */
-    this.router.post(`${this.path}`, async (req: Request, res: Response<DefaultHttpResponse>, next: NextFunction) => {
+    this.router.post(`${this.path}`, async (req: Request, res: Response<DataHttpResponse<{authorization: Authorization}>>, next: NextFunction) => {
       try {
         const resp = await new Authorizations().postAuthorization(req.headers, req.body, next)
-        res.status(resp.httpStatus).send({ code: resp.code, message: resp.message })
+        res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
       } catch (error) {}
     })
 
@@ -92,9 +92,9 @@ export default class AuthorizationsRouter implements Route {
      *           schema:
      *             type: object
      *             properties:
-     *               element_type:
+     *               elementType:
      *                 type: string
-     *               element_id:
+     *               elementId:
      *                 type: number
      *               content:
      *                 type: string
@@ -102,10 +102,10 @@ export default class AuthorizationsRouter implements Route {
      *       200:
      *         description: Authorization updated
      */
-    this.router.put(`${this.path}/:id`, async (req: Request, res: Response<DefaultHttpResponse>, next: NextFunction) => {
+    this.router.put(`${this.path}/:id`, async (req: Request, res: Response<DataHttpResponse<{authorization: Authorization}>>, next: NextFunction) => {
       try {
         const resp = await new Authorizations().putAuthorization(req.headers, +req.params.id, req.body, next)
-        res.status(resp.httpStatus).send({ code: resp.code, message: resp.message })
+        res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
       } catch (error) {}
     })
 
