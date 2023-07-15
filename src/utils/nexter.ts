@@ -9,7 +9,7 @@ import { UnauthorizedException } from '$responses/exceptions/unauthorized-except
 
 class Nexter {
   /**
-   * @return `!serviceToException.status ? ERROR : SUCCESS`
+   * @return `!serviceToException().status ? ERROR : SUCCESS`
    */
   serviceToException<T>(service: DataServiceResponse<T>): { status: boolean; exception?: any; data?: T } {
     if (service.status || service.code == SUCCESS) return { status: true, data: service.data }

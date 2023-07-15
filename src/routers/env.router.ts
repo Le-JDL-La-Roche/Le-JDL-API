@@ -4,7 +4,7 @@ import { Request, Response } from 'express'
 import Env from '$controllers/env.controller'
 import { DataHttpResponse } from '$models/responses/http/data-http-response.model'
 import { DefaultHttpResponse } from '$models/responses/http/default-http-response.model'
-import { Journalist } from '$models/features/journalist.model'
+import { Journalist } from '$models/data/journalist.model'
 
 export default class EnvRouter implements Route {
   router = Router()

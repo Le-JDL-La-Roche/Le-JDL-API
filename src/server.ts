@@ -6,5 +6,17 @@ import DefaultSocket from '$sockets/default.socket'
 import WebradioRouter from '$routers/webradio.router'
 import VideosRouter from '$routers/video.router'
 import ArticlesRouter from '$routers/articles.router'
+import AuthorizationsRouter from '$routers/authorizations.router'
 
-new App([new DefaultRouter(), new AuthRouter(), new EnvRouter(), new WebradioRouter(), new VideosRouter(), new ArticlesRouter()], [new DefaultSocket()]).listen()
+new App(
+  [
+    new DefaultRouter(),
+    new AuthRouter(),
+    new EnvRouter(),
+    new WebradioRouter(),
+    new VideosRouter(),
+    new ArticlesRouter(),
+    new AuthorizationsRouter()
+  ],
+  [new DefaultSocket()]
+).listen()
