@@ -91,7 +91,7 @@ export default class AuthorizationsRouter implements Route {
      *       200:
      *         description: Authorization posted
      */
-    this.router.post(`${this.path}`, async (req: Request, res: Response<DataHttpResponse<{ authorization: Authorization }>>, next: NextFunction) => {
+    this.router.post(`${this.path}`, async (req: Request, res: Response<DataHttpResponse<{ authorizations: Authorization[] }>>, next: NextFunction) => {
       try {
         const resp = await new Authorizations().postAuthorization(req.headers, req.body, next)
         res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
@@ -130,7 +130,7 @@ export default class AuthorizationsRouter implements Route {
      */
     this.router.put(
       `${this.path}/:id`,
-      async (req: Request, res: Response<DataHttpResponse<{ authorization: Authorization }>>, next: NextFunction) => {
+      async (req: Request, res: Response<DataHttpResponse<{ authorizations: Authorization[] }>>, next: NextFunction) => {
         try {
           const resp = await new Authorizations().putAuthorization(req.headers, +req.params.id, req.body, next)
           res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
@@ -155,7 +155,7 @@ export default class AuthorizationsRouter implements Route {
      *       200:
      *         description: Authorization deleted
      */
-    this.router.delete(`${this.path}/:id`, async (req: Request, res: Response<DefaultHttpResponse>, next: NextFunction) => {
+    this.router.delete(`${this.path}/:id`, async (req: Request, res: Response<DataHttpResponse<{authorizations: Authorization[]}>>, next: NextFunction) => {
       try {
         const resp = await new Authorizations().deleteAuthorization(req.headers, +req.params.id, next)
         res.status(resp.httpStatus).send({ code: resp.code, message: resp.message })

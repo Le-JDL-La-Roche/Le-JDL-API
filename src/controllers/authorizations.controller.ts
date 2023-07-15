@@ -64,7 +64,7 @@ export default class Authorizations {
     headers: IncomingHttpHeaders,
     body: Authorization,
     next: NextFunction
-  ): Promise<DataSuccess<{ authorization: Authorization }>> {
+  ): Promise<DataSuccess<{ authorizations: Authorization[] }>> {
     const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
 
     if (!auth.status) {
@@ -119,7 +119,16 @@ export default class Authorizations {
       throw null
     }
 
-    return new DataSuccess(201, SUCCESS, 'Success', { authorization: body })
+    let authorizations: Authorization[] = []
+
+    try {
+      authorizations = await db.query<Authorization[]>('SELECT * FROM authorizations')
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    return new DataSuccess(201, SUCCESS, 'Success', { authorizations })
   }
 
   async putAuthorization(
@@ -127,7 +136,7 @@ export default class Authorizations {
     authorizationId: number,
     body: Authorization,
     next: NextFunction
-  ): Promise<DataSuccess<{ authorization: Authorization }>> {
+  ): Promise<DataSuccess<{ authorizations: Authorization[] }>> {
     const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
 
     if (!auth.status) {
@@ -185,10 +194,19 @@ export default class Authorizations {
       throw null
     }
 
-    return new DataSuccess(200, SUCCESS, 'Success', { authorization })
+    let authorizations: Authorization[] = []
+
+    try {
+      authorizations = await db.query<Authorization[]>('SELECT * FROM authorizations')
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    return new DataSuccess(200, SUCCESS, 'Success', { authorizations })
   }
 
-  async deleteAuthorization(headers: IncomingHttpHeaders, authorizationId: number, next: NextFunction): Promise<DefaultSuccess> {
+  async deleteAuthorization(headers: IncomingHttpHeaders, authorizationId: number, next: NextFunction): Promise<DataSuccess<{authorizations: Authorization[]}>> {
     const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
 
     if (!auth.status) {
@@ -217,7 +235,16 @@ export default class Authorizations {
       throw null
     }
 
-    return new DefaultSuccess(200, SUCCESS, 'Success')
+    let authorizations: Authorization[] = []
+
+    try {
+      authorizations = await db.query<Authorization[]>('SELECT * FROM authorizations')
+    } catch (error) {
+      next(new DBException(undefined, error))
+      throw null
+    }
+
+    return new DataSuccess(200, SUCCESS, 'Success', { authorizations })
   }
 
   private async checkElement(body: Authorization): Promise<void> {
