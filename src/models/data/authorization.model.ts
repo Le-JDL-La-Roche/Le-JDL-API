@@ -35,12 +35,11 @@ export interface ArticleAuthorization {
 
 export interface GuestAuthorization {
   name: string | null
-  eventType: 'show' | 'video' | string
+  eventType: "l'émission de radio" | "l'enregistrement vidéo" | string
   date: string
   place: 'au Lycée La Rochefoucauld (75007 PARIS)' | 'en visioconférence' | string
   use: 'diffusés en direct et publiés après montage' | string
   media: 'le Blog, le compte Instagram, la chaîne YouTube, les plateformes de streaming' | string
-  limitation?: [{value: string | null, checked: boolean}, {value: string | null, checked: boolean}]
 }
 
 interface Guest {

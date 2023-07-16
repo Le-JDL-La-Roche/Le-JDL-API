@@ -92,7 +92,7 @@ export default class Articles {
       throw null
     }
 
-    if (!body.title || !body.article || !file || !body.thumbnailSrc || !body.category || !body.author || body.status) {
+    if (!body.title || !body.article || !file || !body.thumbnailSrc || !body.category || !body.author || !body.status) {
       next(new RequestException('Missing parameters'))
       throw null
     }
