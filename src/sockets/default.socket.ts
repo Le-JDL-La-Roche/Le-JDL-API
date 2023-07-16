@@ -54,8 +54,6 @@ export default class DefaultSocket implements IO {
         questions = (await db.query<WebradioQuestion[]>('SELECT * FROM webradio_shows_questions WHERE show_id = ? ORDER BY date ASC', liveShow.id))
       } catch (error) {
         socket.emit('error', error)
-        console.log(error)
-
         return
       }
 
