@@ -7,7 +7,7 @@ import { NextFunction } from 'express'
 import { IncomingHttpHeaders } from 'http'
 import { DefaultSuccess } from '$responses/success/default-success.response'
 import nexter from '$utils/nexter'
-import { ArticleAuthorization, Authorization, GuestAuthorization, VideoAuthorization, WebradioAuthorization } from '$models/data/authorization.model'
+import { ArticleAuthorization, Authorization, Guest, VideoAuthorization, WebradioAuthorization } from '$models/data/authorization.model'
 import { RequestException } from '$responses/exceptions/request-exception.response'
 
 export default class Authorizations {
@@ -74,7 +74,7 @@ export default class Authorizations {
 
     if (
       !body.elementId ||
-      (body.elementType !== 'show' && body.elementType !== 'video' && body.elementType !== 'article' && body.elementType !== 'guest') ||
+      (body.elementType !== 'show' && body.elementType !== 'video' && body.elementType !== 'article') ||
       !body.content ||
       typeof body.content !== 'string'
     ) {
