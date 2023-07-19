@@ -31,7 +31,7 @@ const options: swaggerJSDoc.OAS3Options = {
     },
     tags: [{ name: 'Auth' }, { name: 'Environnement' }, { name: 'Webradio' }, { name: 'Videos' }, { name: 'Articles' }, { name: 'Authorizations' }]
   },
-  apis: ['./src/routers/**/*.ts']
+  apis: ['./src/routers/*.ts', './build/src/routers/*.js']
 }
 
 export default swaggerJSDoc(options)

@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
+    "outDir": "build",
     "paths": {
       "$controllers": [
         "./src/controllers"
@@ -48,7 +50,7 @@
       ],
       "$utils/*": [
         "./src/utils/*"
-      ],
+      ]
     },
     "target": "es2016",
     "module": "commonjs",
