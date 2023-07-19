@@ -5,7 +5,8 @@
   "private": true,
   "license": "GPL-3.0-or-later",
   "scripts": {
-    "dev": "ts-node-dev -r tsconfig-paths/register src/server.ts"
+    "dev": "ts-node-dev -r tsconfig-paths/register src/server.ts",
+    "build": "tsc --project tsconfig.json && tscpaths -p tsconfig.json -s . -o ./build"
   },
   "dependencies": {
     "assert": "^2.0.0",
@@ -22,6 +23,7 @@
     "socket.io": "^4.6.2",
     "swagger-jsdoc": "^6.2.7",
     "swagger-ui-express": "^4.6.0",
+    "tscpaths": "^0.0.9",
     "tslib": "^2.4.1"
   },
   "devDependencies": {
