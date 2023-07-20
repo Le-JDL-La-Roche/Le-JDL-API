@@ -5,7 +5,7 @@
   "private": true,
   "license": "GPL-3.0-or-later",
   "scripts": {
-    "dev": "ts-node-dev -r tsconfig-paths/register src/server.ts",
+    "dev": "ts-node-dev -r tsconfig-paths/register index.ts",
     "build": "tsc --project tsconfig.json && tscpaths -p tsconfig.json -s . -o ./build"
   },
   "dependencies": {
