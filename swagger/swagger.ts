@@ -6,7 +6,7 @@ const options: swaggerJSDoc.OAS3Options = {
     info: {
       title: 'Le JDL API',
       version: '2.0.0',
-      description: 'API du Blog du JDL',
+      description: 'API du site Web du JDL',
       license: {
         name: 'GPL-3.0-or-later'
       }

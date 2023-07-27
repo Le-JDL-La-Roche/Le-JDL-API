@@ -7,6 +7,8 @@ import { count } from '$models/types'
 import { WebradioQuestion } from '$models/features/webradio-question.model'
 
 export default class DefaultSocket implements IO {
+  static viewers: number = 0
+
   socket(socket: Socket, io: Server) {
     socket.on('launchLiveStream', async () => {
       let liveShow: WebradioShow
@@ -58,6 +60,16 @@ export default class DefaultSocket implements IO {
       }
 
       io.emit('updateQuestions', questions)
+    })
+
+    socket.on('addViewer', () => {
+      io.emit('updateViewers', ++DefaultSocket.viewers)
+      console.log(DefaultSocket.viewers)
+    })
+    
+    socket.on('removeViewer', () => {
+      io.emit('updateViewers', --DefaultSocket.viewers)
+      console.log(DefaultSocket.viewers)
     })
   }
 }
