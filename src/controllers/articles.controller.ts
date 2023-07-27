@@ -176,6 +176,8 @@ export default class Articles {
       throw null
     }
 
+    console.log(+article.status, +body.status)
+
     article = {
       title: body.title ? body.title + '' : article.title,
       article: body.article ? body.article + '' : article.article,
@@ -183,14 +185,14 @@ export default class Articles {
       thumbnailSrc: body.thumbnailSrc ? body.thumbnailSrc + '' : article.thumbnailSrc,
       category: body.category ? body.category : article.category,
       author: body.author ? body.author + '' : article.author,
-      date: article.date,
+      date: +article.status === -1 && +body.status === 2 ? Math.round(Date.now() / 1000) + '' : article.date,
       status: body.status ? body.status : article.status
     }
 
     try {
       await db.query(
-        'UPDATE articles SET title = ?, article = ?, thumbnail = ?, thumbnail_src = ?, category = ?, author = ?, status = ? WHERE id = ?',
-        [article.title, article.article, article.thumbnail, article.thumbnailSrc, article.category, article.author, article.status, articleId]
+        'UPDATE articles SET title = ?, article = ?, thumbnail = ?, thumbnail_src = ?, category = ?, author = ?, date = ?, status = ? WHERE id = ?',
+        [article.title, article.article, article.thumbnail, article.thumbnailSrc, article.category, article.author, article.date, article.status, articleId]
       )
     } catch (error) {
       next(new DBException(undefined, error))

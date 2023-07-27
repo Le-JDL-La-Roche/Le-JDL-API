@@ -20,6 +20,8 @@ export default class DefaultSocket implements IO {
         return
       }
 
+      DefaultSocket.viewers = 0
+
       if (liveShow && liveShow.id) {
         io.emit('liveStreamLaunched', liveShow)
       }
@@ -34,6 +36,8 @@ export default class DefaultSocket implements IO {
         socket.emit('error', error)
         return
       }
+
+      DefaultSocket.viewers = 0
 
       if (liveShowCount.count == 0) {
         io.emit('liveStreamStopped')
@@ -64,12 +68,13 @@ export default class DefaultSocket implements IO {
 
     socket.on('addViewer', () => {
       io.emit('updateViewers', ++DefaultSocket.viewers)
-      console.log(DefaultSocket.viewers)
     })
     
     socket.on('removeViewer', () => {
-      io.emit('updateViewers', --DefaultSocket.viewers)
-      console.log(DefaultSocket.viewers)
+      io.emit('updateViewers', (DefaultSocket.viewers <= 0 ? 0 : --DefaultSocket.viewers))
+    })
+    socket.on('getViewers', () => {
+      io.emit('updateViewers', DefaultSocket.viewers)
     })
   }
 }

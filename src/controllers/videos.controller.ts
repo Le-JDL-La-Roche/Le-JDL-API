@@ -181,14 +181,14 @@ export default class Videos {
       type: body.type ? body.type : video.type,
       category: body.category ? body.category : video.category,
       author: body.author ? body.author + '' : video.author,
-      date: video.date,
+      date: video.status === -1 && body.status === 2 ? Math.round(Date.now() / 1000) + '' : video.date,
       status: body.status ? (+body.status as -1 | 2) : video.status
     }
 
     try {
       await db.query(
-        'UPDATE videos SET title = ?, description = ?, thumbnail = ?, video_id = ?, type = ?, category = ?, author = ?, status = ? WHERE id = ?',
-        [video.title, video.description, video.thumbnail, video.videoId, video.type, video.category, video.author, video.status, +videoId]
+        'UPDATE videos SET title = ?, description = ?, thumbnail = ?, video_id = ?, type = ?, category = ?, author = ?, date = ?, status = ? WHERE id = ?',
+        [video.title, video.description, video.thumbnail, video.videoId, video.type, video.category, video.author, video.date, video.status, +videoId]
       )
     } catch (error) {
       next(new DBException(undefined, error))

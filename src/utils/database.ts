@@ -1,7 +1,7 @@
 import mysql, { RowDataPacket } from 'mysql2/promise'
 import dotenv from 'dotenv'
 
-dotenv.config()
+dotenv.config({ path: `${__dirname}/../../.env` })
 
 class DataBase {
   static db: mysql.Connection | false = false
