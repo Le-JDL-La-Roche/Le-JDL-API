@@ -13,7 +13,7 @@ export default class App {
   private expressApp = express()
   private httpServer = createServer(this.expressApp)
   private ioServer = new Server(this.httpServer, { cors: { origin: '*' } })
-  private port = 3000
+  private port = 5000
 
   constructor(routers: Route[], sockets: IO[]) {
     dotenv.config()
