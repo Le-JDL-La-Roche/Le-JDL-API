@@ -91,6 +91,7 @@ export default class Env {
 
   async updateVisits(next: NextFunction): Promise<DefaultSuccess> {
     let visits: Visits['visits'] = []
+    console.log('1')
 
     try {
       visits = await this.updateDb()
@@ -98,16 +99,18 @@ export default class Env {
       next(error)
       throw null
     }
+    console.log('2', visits)
 
     try {
-      await db.query('UPDATE visits SET visits = ? WHERE timestamp >= ?', [
-        visits[0].visits + 1,
-        new Date(new Date().setHours(0, 0, 0, 0)).getTime() / 1000
-      ])
+      let timestamp = new Date(new Date().setHours(0, 0, 0, 0)).getTime() / 1000
+      let tMin = timestamp - 3600
+      let tMax = timestamp + 3600
+      await db.query('UPDATE visits SET visits = ? WHERE timestamp >= ? AND timestamp <= ?', [visits[0].visits + 1, tMin, tMax])
     } catch (error) {
       next(new DBException())
       throw null
     }
+    console.log('3')
 
     return new DefaultSuccess(200, SUCCESS, 'Success')
   }
