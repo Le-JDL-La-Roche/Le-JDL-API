@@ -60,7 +60,7 @@ export default class Videos {
       throw null
     }
 
-    if (video.status == -1) {
+    if (video.status == -2) {
       const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
 
       if (!auth.status) {
@@ -95,7 +95,7 @@ export default class Videos {
       throw null
     }
 
-    if (+body.status != -1 && +body.status != 2) {
+    if (+body.status != -2 && +body.status != 2) {
       next(new RequestException('Invalid parameters'))
       throw null
     }
@@ -168,7 +168,7 @@ export default class Videos {
       throw null
     }
 
-    if (body.status != null && body.status != undefined && +body.status != -1 && +body.status != 2) {
+    if (body.status != null && body.status != undefined && +body.status != -2 && +body.status != 2) {
       next(new RequestException('Invalid parameters'))
       throw null
     }
@@ -181,8 +181,8 @@ export default class Videos {
       type: body.type ? body.type : video.type,
       category: body.category ? body.category : video.category,
       author: body.author ? body.author + '' : video.author,
-      date: video.status === -1 && body.status === 2 ? Math.round(Date.now() / 1000) + '' : video.date,
-      status: body.status ? (+body.status as -1 | 2) : video.status
+      date: video.status === -2 && body.status === 2 ? Math.round(Date.now() / 1000) + '' : video.date,
+      status: body.status ? body.status : video.status
     }
 
     try {

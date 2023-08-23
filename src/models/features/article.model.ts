@@ -8,5 +8,5 @@ export interface Article {
   author: string
   date: string
   views?: number
-  status: -1 | 2
+  status: -2 | 2
 }
