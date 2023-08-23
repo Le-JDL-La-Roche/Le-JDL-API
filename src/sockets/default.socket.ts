@@ -10,6 +10,23 @@ export default class DefaultSocket implements IO {
   static viewers: number = 0
 
   socket(socket: Socket, io: Server) {
+    socket.on('launchWaitStream', async () => {
+      let liveShow: WebradioShow
+
+      try {
+        liveShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = -1 ORDER BY date DESC'))[0]
+      } catch (error) {
+        socket.emit('error', error)
+        return
+      }
+
+      DefaultSocket.viewers = 0
+
+      if (liveShow && liveShow.id) {
+        io.emit('waitStreamLaunched', liveShow)
+      }
+    })
+
     socket.on('launchLiveStream', async () => {
       let liveShow: WebradioShow
 

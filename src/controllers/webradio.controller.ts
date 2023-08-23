@@ -28,7 +28,7 @@ export default class Webradio {
     let webradioShow: WebradioShow
 
     try {
-      webradioShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = 0 ORDER BY date DESC'))[0]
+      webradioShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = -1 OR status = 0 ORDER BY date DESC'))[0]
     } catch (error) {
       next(new DBException(undefined, error))
       throw null
@@ -76,7 +76,7 @@ export default class Webradio {
       throw null
     }
 
-    if (webradioShow.status != 0 && webradioShow.status != 2) {
+    if (webradioShow.status != -1 && webradioShow.status != 0 && webradioShow.status != 2) {
       const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
 
       if (!auth.status) {
@@ -106,7 +106,7 @@ export default class Webradio {
       throw null
     }
 
-    if (+body.status != -1 && +body.status != 0 && +body.status != 1 && +body.status != 2) {
+    if (+body.status != -2 && +body.status != -1 && +body.status != 0 && +body.status != 1 && +body.status != 2) {
       next(new RequestException('Invalid parameters'))
       throw null
     }
@@ -114,13 +114,13 @@ export default class Webradio {
     let liveShow: WebradioShow
 
     try {
-      liveShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = 0'))[0]
+      liveShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = -1 OR status = 0'))[0]
     } catch (error) {
       next(new DBException(undefined, error))
       throw null
     }
 
-    if (liveShow && liveShow.id && +body.status == 0) {
+    if (liveShow && liveShow.id && (+body.status != -1 ||  +body.status == 0)) {
       next(new RequestException('A show is already live'))
       throw null
     }
@@ -180,7 +180,7 @@ export default class Webradio {
       throw null
     }
 
-    if (body.status != null && body.status != undefined && +body.status != -1 && +body.status != 0 && +body.status != 1 && +body.status != 2) {
+    if (body.status != null && body.status != undefined && +body.status != -2 && +body.status != -1 && +body.status != 0 && +body.status != 1 && +body.status != 2) {
       next(new RequestException('Invalid parameters'))
       throw null
     }
@@ -188,13 +188,13 @@ export default class Webradio {
     let liveShow: WebradioShow
 
     try {
-      liveShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = 0'))[0]
+      liveShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = -1 OR status = 0'))[0]
     } catch (error) {
       next(new DBException(undefined, error))
       throw null
     }
 
-    if (liveShow && liveShow.id && liveShow.id != webradioShow.id && +body.status == 0) {
+    if (liveShow && liveShow.id && liveShow.id != webradioShow.id && (+body.status == -1 || +body.status == 0)) {
       next(new RequestException('A show is already live'))
       throw null
     }
@@ -285,7 +285,7 @@ export default class Webradio {
     let webradioShow: WebradioShow
 
     try {
-      webradioShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = 0'))[0]
+      webradioShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = -1 OR status = 0'))[0]
     } catch (error) {
       next(new DBException(undefined, error))
       throw null
@@ -318,7 +318,7 @@ export default class Webradio {
     let webradioShow: WebradioShow
 
     try {
-      webradioShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = 0'))[0]
+      webradioShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = -1 OR status = 0'))[0]
     } catch (error) {
       next(new DBException(undefined, error))
       throw null

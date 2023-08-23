@@ -32,7 +32,7 @@ export default class Env {
       visits.visits = await db.query('SELECT * FROM visits ORDER BY timestamp DESC')
 
       shows.status.draft = (await db.query<count[]>('SELECT COUNT(*) AS count FROM webradio_shows WHERE status = -1'))[0].count
-      shows.status.live = (await db.query<count[]>('SELECT COUNT(*) AS count FROM webradio_shows WHERE status = 0'))[0].count
+      shows.status.live = (await db.query<count[]>('SELECT COUNT(*) AS count FROM webradio_shows WHERE status = -1 OR status = 0'))[0].count
       shows.status.waiting = (await db.query<count[]>('SELECT COUNT(*) AS count FROM webradio_shows WHERE status = 1'))[0].count
       shows.status.podcast = (await db.query<count[]>('SELECT COUNT(*) AS count FROM webradio_shows WHERE status = 2'))[0].count
 

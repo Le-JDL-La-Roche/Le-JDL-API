@@ -8,5 +8,5 @@ export interface Video {
   category: 'news' | 'culture' | 'sport' | 'science' | 'tech' | 'laroche' | ''
   author: string
   date: string
-  status: -1 | 2
+  status: -2 | 2
 }

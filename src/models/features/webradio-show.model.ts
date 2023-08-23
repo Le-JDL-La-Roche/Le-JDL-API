@@ -5,6 +5,6 @@ export interface WebradioShow {
   thumbnail: string
   streamId: string
   podcastId?: string
-  status: -1 | 0 | 1 | 2
+  status: -2 | -1 | 0 | 1 | 2
   date: string
 }

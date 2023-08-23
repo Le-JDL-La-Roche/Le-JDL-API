@@ -67,7 +67,7 @@ export default class Articles {
       throw null
     }
 
-    if (article.status == -1) {
+    if (article.status == -2) {
       const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
 
       if (!auth.status) {
@@ -102,7 +102,7 @@ export default class Articles {
       throw null
     }
 
-    if (+body.status != -1 && +body.status != 2) {
+    if (+body.status != -2 && +body.status != 2) {
       next(new RequestException('Invalid parameters'))
       throw null
     }
@@ -171,7 +171,7 @@ export default class Articles {
       throw null
     }
 
-    if (body.status != null && body.status != undefined && +body.status != -1 && +body.status != 2) {
+    if (body.status != null && body.status != undefined && +body.status != -2 && +body.status != 2) {
       next(new RequestException('Invalid parameters'))
       throw null
     }
@@ -185,7 +185,7 @@ export default class Articles {
       thumbnailSrc: body.thumbnailSrc ? body.thumbnailSrc + '' : article.thumbnailSrc,
       category: body.category ? body.category : article.category,
       author: body.author ? body.author + '' : article.author,
-      date: +article.status === -1 && +body.status === 2 ? Math.round(Date.now() / 1000) + '' : article.date,
+      date: +article.status === -2 && +body.status === 2 ? Math.round(Date.now() / 1000) + '' : article.date,
       status: body.status ? body.status : article.status
     }
 
