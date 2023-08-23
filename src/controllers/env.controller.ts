@@ -91,7 +91,6 @@ export default class Env {
 
   async updateVisits(next: NextFunction): Promise<DefaultSuccess> {
     let visits: Visits['visits'] = []
-    console.log('1')
 
     try {
       visits = await this.updateDb()
@@ -99,7 +98,6 @@ export default class Env {
       next(error)
       throw null
     }
-    console.log('2', visits)
 
     try {
       let timestamp = new Date(new Date().setHours(0, 0, 0, 0)).getTime() / 1000
@@ -110,7 +108,6 @@ export default class Env {
       next(new DBException())
       throw null
     }
-    console.log('3')
 
     return new DefaultSuccess(200, SUCCESS, 'Success')
   }
