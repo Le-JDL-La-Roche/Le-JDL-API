@@ -5,6 +5,7 @@ import { DefaultHttpResponse } from '$models/responses/http/default-http-respons
 import moment from 'moment'
 
 const middleware = (err: ControllerException, req: Request, res: Response<DefaultHttpResponse>, next: NextFunction) => {
+  console.error(`ERR  ${dateFormat(moment()).format('YYYY-MM-DD HH:mm:ss')}  ${req.method} ${req.path} with code 404 and message 'Not found'`)
   res.status(err.httpStatus).send({ code: err.code, message: err.message })
 }
 

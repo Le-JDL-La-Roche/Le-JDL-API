@@ -29,7 +29,15 @@ const options: swaggerJSDoc.OAS3Options = {
         }
       }
     },
-    tags: [{ name: 'Auth' }, { name: 'Environnement' }, { name: 'Webradio' }, { name: 'Videos' }, { name: 'Articles' }, { name: 'Authorizations' }]
+    tags: [
+      { name: 'Auth' },
+      { name: 'Environnement' },
+      { name: 'Webradio' },
+      { name: 'Videos' },
+      { name: 'Articles' },
+      { name: 'Agenda' },
+      { name: 'Authorizations' }
+    ]
   },
   apis: [`${__dirname}/./../src/routers/*.ts`, `${__dirname}/./../build/src/routers/*.js`]
 }

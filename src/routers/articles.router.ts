@@ -1,11 +1,11 @@
 import { Route } from '$models/handle/route.model'
-import { Router } from 'express'
-import { NextFunction } from 'express-serve-static-core'
+import { Router, NextFunction } from 'express'
 import { Request, Response } from 'express'
 import Articles from '$controllers/articles.controller'
 import { DataHttpResponse } from '$models/responses/http/data-http-response.model'
 import { Article } from '$models/features/article.model'
 import { FilesService } from '$services/files.service'
+import { ControllerException } from '$models/types'
 
 export default class ArticlesRouter implements Route {
   router = Router()
@@ -29,9 +29,11 @@ export default class ArticlesRouter implements Route {
      */
     this.router.get(`${this.path}`, async (req: Request, res: Response<DataHttpResponse<{ articles: Article[] }>>, next: NextFunction) => {
       try {
-        const resp = await new Articles().getPublishedArticles(next)
+        const resp = await new Articles().getPublishedArticles()
         res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
-      } catch (error) {}
+      } catch (error: unknown) {
+        next(error as ControllerException)
+      }
     })
 
     /**
@@ -49,9 +51,11 @@ export default class ArticlesRouter implements Route {
      */
     this.router.get(`${this.path}/all`, async (req: Request, res: Response<DataHttpResponse<{ articles: Article[] }>>, next: NextFunction) => {
       try {
-        const resp = await new Articles().getAllArticles(req.headers, next)
+        const resp = await new Articles().getAllArticles(req.headers)
         res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
-      } catch (error) {}
+      } catch (error: unknown) {
+        next(error as ControllerException)
+      }
     })
 
     /**
@@ -73,9 +77,11 @@ export default class ArticlesRouter implements Route {
      */
     this.router.get(`${this.path}/:id`, async (req: Request, res: Response<DataHttpResponse<{ article: Article }>>, next: NextFunction) => {
       try {
-        const resp = await new Articles().getArticle(req.headers, +req.params.id, next)
+        const resp = await new Articles().getArticle(req.headers, +req.params.id)
         res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
-      } catch (error) {}
+      } catch (error: unknown) {
+        next(error as ControllerException)
+      }
     })
 
     /**
@@ -117,9 +123,11 @@ export default class ArticlesRouter implements Route {
       new FilesService().uploadArticleThumbnail,
       async (req: Request, res: Response<DataHttpResponse<{ articles: Article[] }>>, next: NextFunction) => {
         try {
-          const resp = await new Articles().postArticle(req.headers, req.body, req.file || null, next)
+          const resp = await new Articles().postArticle(req.headers, req.body, req.file || null)
           res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
-        } catch (error) {}
+        } catch (error: unknown) {
+          next(error as ControllerException)
+        }
       }
     )
 
@@ -166,9 +174,11 @@ export default class ArticlesRouter implements Route {
       new FilesService().uploadArticleThumbnail,
       async (req: Request, res: Response<DataHttpResponse<{ articles: Article[] }>>, next: NextFunction) => {
         try {
-          const resp = await new Articles().putArticle(req.headers, +req.params.id, req.body, req.file || null, next)
+          const resp = await new Articles().putArticle(req.headers, +req.params.id, req.body, req.file || null)
           res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
-        } catch (error) {}
+        } catch (error: unknown) {
+          next(error as ControllerException)
+        }
       }
     )
 
@@ -191,9 +201,11 @@ export default class ArticlesRouter implements Route {
      */
     this.router.delete(`${this.path}/:id`, async (req: Request, res: Response<DataHttpResponse<{ articles: Article[] }>>, next: NextFunction) => {
       try {
-        const resp = await new Articles().deleteArticle(req.headers, +req.params.id, next)
+        const resp = await new Articles().deleteArticle(req.headers, +req.params.id)
         res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
-      } catch (error) {}
+      } catch (error: unknown) {
+        next(error as ControllerException)
+      }
     })
   }
 }

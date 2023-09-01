@@ -21,4 +21,4 @@ L'API est hébergé sur un server Node.js, qui sert les fichiers, en combinaison
 
 Le code source de l'API est disponible sur [GitHub](/https://github.com/Le-JDL-La-Roche/Le-JDL-API) sous licence [GNU GPLv3](https://github.com/Le-JDL-La-Roche/Le-JDL-API/blob/main/LICENSE). Vous pouvez donc le consulter, le modifier et le redistribuer librement, à condition de respecter les termes de la licence.
 
-En cas de problème/bug/suggestion, vous pouvez [ouvrir une issue](https://github.com/Le-JDL-La-Roche/Le-JDL-API/issues) sur GitHub.
+En cas de problème/bug/suggestion, vous pouvez [ouvrir une *issue*](https://github.com/Le-JDL-La-Roche/Le-JDL-API/issues) sur GitHub.
