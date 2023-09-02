@@ -1,6 +1,6 @@
 import db from '$utils/database'
 import { AuthService } from '$services/auth.service'
-import { SUCCESS } from '$models/types'
+import { ControllerException, SUCCESS } from '$models/types'
 import { DBException } from '$responses/exceptions/db-exception.response'
 import { DataSuccess } from '$responses/success/data-success.response'
 import { NextFunction } from 'express'
@@ -11,20 +11,20 @@ import nexter from '$utils/nexter'
 
 export default class Auth {
   async auth(headers: IncomingHttpHeaders): Promise<DataSuccess<{ jwt: string }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Basic'))
-
-    if (!auth.status) {
-      throw auth.exception
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Basic'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     return new DataSuccess(200, SUCCESS, 'Success', { jwt: jwt.generate() })
   }
 
   async verify(headers: IncomingHttpHeaders): Promise<DataSuccess<{ jwt: string }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      throw auth.exception
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     const token = (headers['authorization'] + '').split(' ')[1]
@@ -33,10 +33,10 @@ export default class Auth {
   }
 
   async logout(headers: IncomingHttpHeaders): Promise<DefaultSuccess> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      throw auth.exception
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     const token = (headers['authorization'] + '').split(' ')[1]

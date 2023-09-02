@@ -1,5 +1,5 @@
 import db from '$utils/database'
-import { SUCCESS } from '$models/types'
+import { ControllerException, SUCCESS } from '$models/types'
 import { DataSuccess } from '$responses/success/data-success.response'
 import { NextFunction } from 'express'
 import { DBException } from '$responses/exceptions/db-exception.response'
@@ -40,10 +40,10 @@ export default class Webradio {
   }
 
   async getAllWebradioShows(headers: IncomingHttpHeaders): Promise<DataSuccess<{ shows: WebradioShow[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      throw auth.exception
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     let webradioShows: WebradioShow[] = []
@@ -71,10 +71,10 @@ export default class Webradio {
     }
 
     if (webradioShow.status != -1 && webradioShow.status != 0 && webradioShow.status != 2) {
-      const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-      if (!auth.status) {
-        throw auth.exception
+      try {
+        nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+      } catch (error: unknown) {
+        throw error as ControllerException
       }
     }
 
@@ -86,10 +86,10 @@ export default class Webradio {
     body: WebradioShow,
     file: Express.Multer.File | null
   ): Promise<DataSuccess<{ shows: WebradioShow[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      throw auth.exception
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     if (!body.title || !body.description || !file || !body.streamId || !body.date || !body.status) {
@@ -108,7 +108,7 @@ export default class Webradio {
       throw new DBException(undefined, error)
     }
 
-    if (liveShow && liveShow.id && (+body.status != -1 ||  +body.status == 0)) {
+    if (liveShow && liveShow.id && (+body.status != -1 || +body.status == 0)) {
       throw new RequestException('A show is already live')
     }
 
@@ -143,10 +143,10 @@ export default class Webradio {
     body: WebradioShow,
     file: Express.Multer.File | null
   ): Promise<DataSuccess<{ shows: WebradioShow[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      throw auth.exception
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     let webradioShow: WebradioShow
@@ -161,7 +161,15 @@ export default class Webradio {
       throw new RequestException('Show not found')
     }
 
-    if (body.status != null && body.status != undefined && +body.status != -2 && +body.status != -1 && +body.status != 0 && +body.status != 1 && +body.status != 2) {
+    if (
+      body.status != null &&
+      body.status != undefined &&
+      +body.status != -2 &&
+      +body.status != -1 &&
+      +body.status != 0 &&
+      +body.status != 1 &&
+      +body.status != 2
+    ) {
       throw new RequestException('Invalid parameters')
     }
 
@@ -217,10 +225,10 @@ export default class Webradio {
   }
 
   async deleteWebradioShow(headers: IncomingHttpHeaders, showId: number): Promise<DataSuccess<{ shows: WebradioShow[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      throw auth.exception
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     let webradioShow: WebradioShow
@@ -316,14 +324,11 @@ export default class Webradio {
     return new DataSuccess(200, SUCCESS, 'Success', { questions: webradioShowQuestions })
   }
 
-  async deleteQuestion(
-    headers: IncomingHttpHeaders,
-    questionId: number
-  ): Promise<DataSuccess<{ questions: WebradioQuestion[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      throw auth.exception
+  async deleteQuestion(headers: IncomingHttpHeaders, questionId: number): Promise<DataSuccess<{ questions: WebradioQuestion[] }>> {
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     try {

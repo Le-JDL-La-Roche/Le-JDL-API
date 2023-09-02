@@ -22,9 +22,10 @@ export class FilesService {
     })
 
     const upload = multer({ storage: webradio }).single('thumbnail')
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(req.headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
+    
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(req.headers['authorization'] + '', 'Bearer'))
+    } catch (error) {
       res.status(401).json({ code: AUTH_ERROR, message: 'Unauthorized' })
       return
     }
@@ -53,9 +54,10 @@ export class FilesService {
     })
 
     const upload = multer({ storage: video }).single('thumbnail')
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(req.headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
+    
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(req.headers['authorization'] + '', 'Bearer'))
+    } catch (error) {
       res.status(401).json({ code: AUTH_ERROR, message: 'Unauthorized' })
       return
     }
@@ -84,9 +86,10 @@ export class FilesService {
     })
 
     const upload = multer({ storage: article }).single('thumbnail')
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(req.headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
+    
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(req.headers['authorization'] + '', 'Bearer'))
+    } catch (error) {
       res.status(401).json({ code: AUTH_ERROR, message: 'Unauthorized' })
       return
     }
@@ -101,6 +104,7 @@ export class FilesService {
     })
   }
 
+  //! AGENDA
   async uploadAgendaThumbnail(req: Request, res: Response, next: NextFunction) {
     const agenda = multer.diskStorage({
       destination: (req, file, next) => {
@@ -114,9 +118,10 @@ export class FilesService {
     })
 
     const upload = multer({ storage: agenda }).single('thumbnail')
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(req.headers['authorization'] + '', 'Bearer'))
 
-    if (!auth.status) {
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(req.headers['authorization'] + '', 'Bearer'))
+    } catch (error) {
       res.status(401).json({ code: AUTH_ERROR, message: 'Unauthorized' })
       return
     }

@@ -1,7 +1,7 @@
 import { NextFunction } from 'express'
 import db from '$utils/database'
 import { DBException } from '$responses/exceptions/db-exception.response'
-import { SUCCESS } from '$models/types'
+import { ControllerException, SUCCESS } from '$models/types'
 import { DataSuccess } from '$responses/success/data-success.response'
 import { RequestException } from '$responses/exceptions/request-exception.response'
 import { IncomingHttpHeaders } from 'http'
@@ -25,10 +25,10 @@ export default class Articles {
   }
 
   async getAllArticles(headers: IncomingHttpHeaders): Promise<DataSuccess<{ articles: Article[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      throw auth.exception
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     let articles: Article[] = []
@@ -62,25 +62,26 @@ export default class Articles {
     }
 
     if (article.status == -2) {
-      const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-      if (!auth.status) {
-        throw auth.exception
+      try {
+        nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+      } catch (error: unknown) {
+        throw error as ControllerException
+      }
+      try {
+        nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+      } catch (error: unknown) {
+        throw error as ControllerException
       }
     }
 
     return new DataSuccess(200, SUCCESS, 'Success', { article })
   }
 
-  async postArticle(
-    headers: IncomingHttpHeaders,
-    body: Article,
-    file: Express.Multer.File | null
-  ): Promise<DataSuccess<{ articles: Article[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      throw auth.exception
+  async postArticle(headers: IncomingHttpHeaders, body: Article, file: Express.Multer.File | null): Promise<DataSuccess<{ articles: Article[] }>> {
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     if (!body.title || !body.article || !file || !body.thumbnailSrc || !body.category || !body.author || !body.status) {
@@ -130,10 +131,10 @@ export default class Articles {
     body: Article,
     file: Express.Multer.File | null
   ): Promise<DataSuccess<{ articles: Article[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      throw auth.exception
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     let article: Article
@@ -198,10 +199,10 @@ export default class Articles {
   }
 
   async deleteArticle(headers: IncomingHttpHeaders, articleId: number): Promise<DataSuccess<{ articles: Article[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      throw auth.exception
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     let article: Article

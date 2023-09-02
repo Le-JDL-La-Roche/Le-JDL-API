@@ -1,5 +1,5 @@
 import db from '$utils/database'
-import { SUCCESS, count } from '$models/types'
+import { ControllerException, SUCCESS, count } from '$models/types'
 import { DataSuccess } from '$responses/success/data-success.response'
 import { NextFunction } from 'express'
 import { DBException } from '$responses/exceptions/db-exception.response'
@@ -63,7 +63,6 @@ export default class Env {
     }
 
     while (visits.visits[0].timestamp - Date.now() / 1000 >= 86400) {
-      let t = visits.visits[0].timestamp + 86400
       visits.visits.unshift({
         id: visits.visits[0].id + 1,
         timestamp: visits.visits[0].timestamp + 86400,
@@ -108,11 +107,11 @@ export default class Env {
     return new DefaultSuccess(200, SUCCESS, 'Success')
   }
 
-  async deleteAdminVisits(headers: IncomingHttpHeaders, timestamp: number, ): Promise<DefaultSuccess> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      throw auth.exception
+  async deleteAdminVisits(headers: IncomingHttpHeaders, timestamp: number): Promise<DefaultSuccess> {
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     let tMin = timestamp - 3600
@@ -190,11 +189,11 @@ export default class Env {
     return new DataSuccess(200, SUCCESS, 'Success', { journalists })
   }
 
-  async postJournalist(headers: IncomingHttpHeaders, body: Journalist, ): Promise<DataSuccess<{ journalists: Journalist[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      throw auth.exception
+  async postJournalist(headers: IncomingHttpHeaders, body: Journalist): Promise<DataSuccess<{ journalists: Journalist[] }>> {
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     if (!body.name || !body.class) {
@@ -218,16 +217,11 @@ export default class Env {
     return new DataSuccess(200, SUCCESS, 'Success', { journalists })
   }
 
-  async putJournalist(
-    headers: IncomingHttpHeaders,
-    journalistId: number,
-    body: Journalist,
-    
-  ): Promise<DataSuccess<{ journalists: Journalist[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      throw auth.exception
+  async putJournalist(headers: IncomingHttpHeaders, journalistId: number, body: Journalist): Promise<DataSuccess<{ journalists: Journalist[] }>> {
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     let journalist: Journalist
@@ -263,15 +257,11 @@ export default class Env {
     return new DataSuccess(200, SUCCESS, 'Success', { journalists })
   }
 
-  async deleteJournalist(
-    headers: IncomingHttpHeaders,
-    journalistId: number,
-    
-  ): Promise<DataSuccess<{ journalists: Journalist[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      throw auth.exception
+  async deleteJournalist(headers: IncomingHttpHeaders, journalistId: number): Promise<DataSuccess<{ journalists: Journalist[] }>> {
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     let journalist: Journalist

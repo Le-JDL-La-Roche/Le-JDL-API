@@ -1,6 +1,6 @@
 import db from '$utils/database'
 import { Event } from '$models/features/agenda.model'
-import { SUCCESS } from '$models/types'
+import { ControllerException, SUCCESS } from '$models/types'
 import { DBException } from '$responses/exceptions/db-exception.response'
 import { DataSuccess } from '$responses/success/data-success.response'
 import { NextFunction } from 'express'
@@ -22,15 +22,11 @@ export default class Agenda {
     return new DataSuccess(200, SUCCESS, 'Success', { agenda })
   }
 
-  async postEvent(
-    headers: IncomingHttpHeaders,
-    body: Event,
-    file: Express.Multer.File | null
-  ): Promise<DataSuccess<{ agenda: Event[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      throw auth.exception
+  async postEvent(headers: IncomingHttpHeaders, body: Event, file: Express.Multer.File | null): Promise<DataSuccess<{ agenda: Event[] }>> {
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     if (!body.title || !body.content || !file || !body.date || !body.color) {
@@ -66,10 +62,10 @@ export default class Agenda {
     body: Event,
     file: Express.Multer.File | null
   ): Promise<DataSuccess<{ agenda: Event[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      throw auth.exception
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     let event: Event
@@ -98,7 +94,8 @@ export default class Agenda {
         event.content,
         event.date,
         event.color,
-        event.thumbnail
+        event.thumbnail,
+        +eventId
       ])
     } catch (error) {
       throw new DBException(undefined, error)
@@ -116,10 +113,10 @@ export default class Agenda {
   }
 
   async deleteEvent(headers: IncomingHttpHeaders, eventId: number): Promise<DataSuccess<{ agenda: Event[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      throw auth.exception
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     let event: Event

@@ -3,7 +3,7 @@ import { DBException } from '$responses/exceptions/db-exception.response'
 import { NextFunction } from 'express'
 import db from '$utils/database'
 import { DataSuccess } from '$responses/success/data-success.response'
-import { SUCCESS } from '$models/types'
+import { ControllerException, SUCCESS } from '$models/types'
 import { RequestException } from '$responses/exceptions/request-exception.response'
 import { IncomingHttpHeaders } from 'http'
 import nexter from '$utils/nexter'
@@ -25,10 +25,10 @@ export default class Videos {
   }
 
   async getAllVideos(headers: IncomingHttpHeaders): Promise<DataSuccess<{ videos: Video[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      throw auth.exception
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     let videos: Video[] = []
@@ -56,25 +56,21 @@ export default class Videos {
     }
 
     if (video.status == -2) {
-      const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-      if (!auth.status) {
-        throw auth.exception
+      try {
+        nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+      } catch (error: unknown) {
+        throw error as ControllerException
       }
     }
 
     return new DataSuccess(200, SUCCESS, 'Success', { video })
   }
 
-  async postVideo(
-    headers: IncomingHttpHeaders,
-    body: Video,
-    file: Express.Multer.File | null
-  ): Promise<DataSuccess<{ videos: Video[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      throw auth.exception
+  async postVideo(headers: IncomingHttpHeaders, body: Video, file: Express.Multer.File | null): Promise<DataSuccess<{ videos: Video[] }>> {
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     if (!body.title || !body.description || !file || !body.type || !body.videoId || !body.category || !body.author || !body.status) {
@@ -125,10 +121,10 @@ export default class Videos {
     body: Video,
     file: Express.Multer.File | null
   ): Promise<DataSuccess<{ videos: Video[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      throw auth.exception
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     let video: Video
@@ -187,10 +183,10 @@ export default class Videos {
   }
 
   async deleteVideo(headers: IncomingHttpHeaders, videoId: number): Promise<DataSuccess<{ videos: Video[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      throw auth.exception
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     let video: Video

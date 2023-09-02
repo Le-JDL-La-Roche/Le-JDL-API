@@ -1,6 +1,6 @@
 import db from '$utils/database'
 import { AuthService } from '$services/auth.service'
-import { SUCCESS, count } from '$models/types'
+import { ControllerException, SUCCESS, count } from '$models/types'
 import { DBException } from '$responses/exceptions/db-exception.response'
 import { DataSuccess } from '$responses/success/data-success.response'
 import { NextFunction } from 'express'
@@ -12,10 +12,10 @@ import { RequestException } from '$responses/exceptions/request-exception.respon
 
 export default class Authorizations {
   async getAuthorizations(headers: IncomingHttpHeaders): Promise<DataSuccess<{ authorizations: Authorization[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      throw auth.exception
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     let authorizations: Authorization[] = []
@@ -29,14 +29,11 @@ export default class Authorizations {
     return new DataSuccess(200, SUCCESS, 'Success', { authorizations })
   }
 
-  async getAuthorization(
-    headers: IncomingHttpHeaders,
-    authorizationId: number
-  ): Promise<DataSuccess<{ authorization: Authorization }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      throw auth.exception
+  async getAuthorization(headers: IncomingHttpHeaders, authorizationId: number): Promise<DataSuccess<{ authorization: Authorization }>> {
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     let authorization: Authorization
@@ -54,14 +51,11 @@ export default class Authorizations {
     return new DataSuccess(200, SUCCESS, 'Success', { authorization })
   }
 
-  async postAuthorization(
-    headers: IncomingHttpHeaders,
-    body: Authorization
-  ): Promise<DataSuccess<{ authorizations: Authorization[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      throw auth.exception
+  async postAuthorization(headers: IncomingHttpHeaders, body: Authorization): Promise<DataSuccess<{ authorizations: Authorization[] }>> {
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     if (
@@ -122,10 +116,10 @@ export default class Authorizations {
     authorizationId: number,
     body: Authorization
   ): Promise<DataSuccess<{ authorizations: Authorization[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      throw auth.exception
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     let authorization: Authorization
@@ -184,11 +178,11 @@ export default class Authorizations {
     return new DataSuccess(200, SUCCESS, 'Success', { authorizations })
   }
 
-  async deleteAuthorization(headers: IncomingHttpHeaders, authorizationId: number): Promise<DataSuccess<{authorizations: Authorization[]}>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      throw auth.exception
+  async deleteAuthorization(headers: IncomingHttpHeaders, authorizationId: number): Promise<DataSuccess<{ authorizations: Authorization[] }>> {
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     let authorization: Authorization
