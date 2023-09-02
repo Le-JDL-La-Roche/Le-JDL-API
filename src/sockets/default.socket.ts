@@ -10,6 +10,7 @@ export default class DefaultSocket implements IO {
   static viewers: number = 0
 
   socket(socket: Socket, io: Server) {
+    //! Launch Wait stream
     socket.on('launchWaitStream', async () => {
       let liveShow: WebradioShow
 
@@ -27,11 +28,12 @@ export default class DefaultSocket implements IO {
       }
     })
 
+    //! Launch Live stream
     socket.on('launchLiveStream', async () => {
       let liveShow: WebradioShow
 
       try {
-        liveShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = 0 ORDER BY date DESC'))[0]
+        liveShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = -1 OR status = 0 ORDER BY date DESC'))[0]
       } catch (error) {
         socket.emit('error', error)
         return
@@ -44,11 +46,12 @@ export default class DefaultSocket implements IO {
       }
     })
 
+    //! Stop Live stream
     socket.on('stopLiveStream', async () => {
       let liveShowCount: count
 
       try {
-        liveShowCount = (await db.query<count[]>('SELECT COUNT(*) as count FROM webradio_shows WHERE status = 0 ORDER BY date DESC'))[0]
+        liveShowCount = (await db.query<count[]>('SELECT COUNT(*) as count FROM webradio_shows WHERE status = -1 OR status = 0 ORDER BY date DESC'))[0]
       } catch (error) {
         socket.emit('error', error)
         return
@@ -61,11 +64,66 @@ export default class DefaultSocket implements IO {
       }
     })
 
+    //! Launch Wait restream
+    socket.on('launchWaitRestream', async () => {
+      let liveShow: WebradioShow
+
+      try {
+        liveShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = -1.5 ORDER BY date DESC'))[0]
+      } catch (error) {
+        socket.emit('error', error)
+        return
+      }
+
+      DefaultSocket.viewers = 0
+
+      if (liveShow && liveShow.id) {
+        io.emit('waitRestreamLaunched', liveShow)
+      }
+    })
+
+    //! Launch Live restream
+    socket.on('launchLiveRestream', async () => {
+      let liveShow: WebradioShow
+
+      try {
+        liveShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = -1.5 OR status = 0.5 ORDER BY date DESC'))[0]
+      } catch (error) {
+        socket.emit('error', error)
+        return
+      }
+
+      DefaultSocket.viewers = 0
+
+      if (liveShow && liveShow.id) {
+        io.emit('liveRestreamLaunched', liveShow)
+      }
+    })
+
+    //! Stop Live restream
+    socket.on('stopLiveRestream', async () => {
+      let liveShowCount: count
+
+      try {
+        liveShowCount = (await db.query<count[]>('SELECT COUNT(*) as count FROM webradio_shows WHERE status = -1.5 OR status = 0.5 ORDER BY date DESC'))[0]
+      } catch (error) {
+        socket.emit('error', error)
+        return
+      }
+
+      DefaultSocket.viewers = 0
+
+      if (liveShowCount.count == 0) {
+        io.emit('liveRestreamStopped')
+      }
+    })
+
+    //! Update Questions
     socket.on('question', async () => {
       let liveShow: WebradioShow
 
       try {
-        liveShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = 0 ORDER BY date DESC'))[0]
+        liveShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = -1 OR status = 0 ORDER BY date DESC'))[0]
       } catch (error) {
         socket.emit('error', error)
         return
@@ -83,13 +141,17 @@ export default class DefaultSocket implements IO {
       io.emit('updateQuestions', questions)
     })
 
+    //! Add Viewer
     socket.on('addViewer', () => {
       io.emit('updateViewers', ++DefaultSocket.viewers)
     })
     
+    //! Remove Viewer
     socket.on('removeViewer', () => {
       io.emit('updateViewers', (DefaultSocket.viewers <= 0 ? 0 : --DefaultSocket.viewers))
     })
+
+    //! Get Viewers
     socket.on('getViewers', () => {
       io.emit('updateViewers', DefaultSocket.viewers)
     })

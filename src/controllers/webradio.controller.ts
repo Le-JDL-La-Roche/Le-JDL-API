@@ -27,7 +27,7 @@ export default class Webradio {
     let webradioShow: WebradioShow
 
     try {
-      webradioShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = -1 OR status = 0 ORDER BY date DESC'))[0]
+      webradioShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = -1 OR status = 0 OR status = -1.5 OR status = 0.5 ORDER BY date DESC'))[0]
     } catch (error) {
       throw new DBException(undefined, error)
     }
@@ -96,19 +96,28 @@ export default class Webradio {
       throw new RequestException('Missing parameters')
     }
 
-    if (+body.status != -2 && +body.status != -1 && +body.status != 0 && +body.status != 1 && +body.status != 2) {
+    if (
+      +body.status != -2 &&
+      +body.status != -2.5 &&
+      +body.status != -1 &&
+      +body.status != -1.5 &&
+      +body.status != 0 &&
+      +body.status != 0.5 &&
+      +body.status != 1 &&
+      +body.status != 2
+    ) {
       throw new RequestException('Invalid parameters')
     }
 
     let liveShow: WebradioShow
 
     try {
-      liveShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = -1 OR status = 0'))[0]
+      liveShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = -1 OR status = 0 OR status = -1.5 OR status = 0.5'))[0]
     } catch (error) {
       throw new DBException(undefined, error)
     }
 
-    if (liveShow && liveShow.id && (+body.status != -1 || +body.status == 0)) {
+    if (liveShow && liveShow.id && (+body.status != -1 || +body.status == 0 || +body.status == -1.5 || +body.status == 0.5)) {
       throw new RequestException('A show is already live')
     }
 
@@ -165,8 +174,11 @@ export default class Webradio {
       body.status != null &&
       body.status != undefined &&
       +body.status != -2 &&
+      +body.status != -2.5 &&
       +body.status != -1 &&
+      +body.status != -1.5 &&
       +body.status != 0 &&
+      +body.status != 0.5 &&
       +body.status != 1 &&
       +body.status != 2
     ) {
@@ -176,12 +188,12 @@ export default class Webradio {
     let liveShow: WebradioShow
 
     try {
-      liveShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = -1 OR status = 0'))[0]
+      liveShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = -1 OR status = 0 OR status = -1.5 OR status = 0.5'))[0]
     } catch (error) {
       throw new DBException(undefined, error)
     }
 
-    if (liveShow && liveShow.id && liveShow.id != webradioShow.id && (+body.status == -1 || +body.status == 0)) {
+    if (liveShow && liveShow.id && liveShow.id != webradioShow.id && (+body.status == -1 || +body.status == 0 || +body.status == -1.5 || +body.status == 0.5)) {
       throw new RequestException('A show is already live')
     }
 
