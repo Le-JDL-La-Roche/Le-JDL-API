@@ -3,7 +3,7 @@ import { DBException } from '$responses/exceptions/db-exception.response'
 import { NextFunction } from 'express'
 import db from '$utils/database'
 import { DataSuccess } from '$responses/success/data-success.response'
-import { SUCCESS } from '$models/types'
+import { ControllerException, SUCCESS } from '$models/types'
 import { RequestException } from '$responses/exceptions/request-exception.response'
 import { IncomingHttpHeaders } from 'http'
 import nexter from '$utils/nexter'
@@ -12,25 +12,23 @@ import { AuthService } from '$services/auth.service'
 export default class Videos {
   private readonly cat = ['news', 'culture', 'sport', 'science', 'tech', 'laroche']
 
-  async getPublishedVideos(next: NextFunction): Promise<DataSuccess<{ videos: Video[] }>> {
+  async getPublishedVideos(): Promise<DataSuccess<{ videos: Video[] }>> {
     let videos: Video[] = []
 
     try {
       videos = await db.query<Video[]>('SELECT * FROM videos WHERE status = 2 ORDER BY date DESC')
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     return new DataSuccess(200, SUCCESS, 'Success', { videos })
   }
 
-  async getAllVideos(headers: IncomingHttpHeaders, next: NextFunction): Promise<DataSuccess<{ videos: Video[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      next(auth.exception)
-      throw null
+  async getAllVideos(headers: IncomingHttpHeaders): Promise<DataSuccess<{ videos: Video[] }>> {
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     let videos: Video[] = []
@@ -38,66 +36,53 @@ export default class Videos {
     try {
       videos = await db.query<Video[]>('SELECT * FROM videos ORDER BY date DESC')
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     return new DataSuccess(200, SUCCESS, 'Success', { videos })
   }
 
-  async getVideo(headers: IncomingHttpHeaders, videoId: number, next: NextFunction): Promise<DataSuccess<{ video: Video }>> {
+  async getVideo(headers: IncomingHttpHeaders, videoId: number): Promise<DataSuccess<{ video: Video }>> {
     let video: Video
 
     try {
       video = (await db.query<Video[]>('SELECT * FROM videos WHERE id = ?', +videoId))[0]
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     if (!video || !video.id) {
-      next(new RequestException('Video not found'))
-      throw null
+      throw new RequestException('Video not found')
     }
 
     if (video.status == -2) {
-      const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-      if (!auth.status) {
-        next(auth.exception)
-        throw null
+      try {
+        nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+      } catch (error: unknown) {
+        throw error as ControllerException
       }
     }
 
     return new DataSuccess(200, SUCCESS, 'Success', { video })
   }
 
-  async postVideo(
-    headers: IncomingHttpHeaders,
-    body: Video,
-    file: Express.Multer.File | null,
-    next: NextFunction
-  ): Promise<DataSuccess<{ videos: Video[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      next(auth.exception)
-      throw null
+  async postVideo(headers: IncomingHttpHeaders, body: Video, file: Express.Multer.File | null): Promise<DataSuccess<{ videos: Video[] }>> {
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     if (!body.title || !body.description || !file || !body.type || !body.videoId || !body.category || !body.author || !body.status) {
-      next(new RequestException('Missing parameters'))
-      throw null
+      throw new RequestException('Missing parameters')
     }
 
     if ((body.type != 'youtube' && body.type != 'instagram') || !this.cat.includes(body.category)) {
-      next(new RequestException('Invalid parameters'))
-      throw null
+      throw new RequestException('Invalid parameters')
     }
 
     if (+body.status != -2 && +body.status != 2) {
-      next(new RequestException('Invalid parameters'))
-      throw null
+      throw new RequestException('Invalid parameters')
     }
 
     try {
@@ -116,8 +101,7 @@ export default class Videos {
         ]
       )
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     let videos: Video[] = []
@@ -125,8 +109,7 @@ export default class Videos {
     try {
       videos = await db.query<Video[]>('SELECT * FROM videos ORDER BY date DESC')
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     return new DataSuccess(200, SUCCESS, 'Success', { videos })
@@ -136,14 +119,12 @@ export default class Videos {
     headers: IncomingHttpHeaders,
     videoId: number,
     body: Video,
-    file: Express.Multer.File | null,
-    next: NextFunction
+    file: Express.Multer.File | null
   ): Promise<DataSuccess<{ videos: Video[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      next(auth.exception)
-      throw null
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     let video: Video
@@ -151,26 +132,22 @@ export default class Videos {
     try {
       video = (await db.query<Video[]>('SELECT * FROM videos WHERE id = ?', +videoId))[0]
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     if (!video || !video.id) {
-      next(new RequestException('Video not found'))
-      throw null
+      throw new RequestException('Video not found')
     }
 
     if (
       (body.category != null && body.category != '' && !this.cat.includes(body.category)) ||
       (body.type != null && body.type! != '' && body.type != 'youtube' && body.type != 'instagram')
     ) {
-      next(new RequestException('Invalid parameters'))
-      throw null
+      throw new RequestException('Invalid parameters')
     }
 
     if (body.status != null && body.status != undefined && +body.status != -2 && +body.status != 2) {
-      next(new RequestException('Invalid parameters'))
-      throw null
+      throw new RequestException('Invalid parameters')
     }
 
     video = {
@@ -191,8 +168,7 @@ export default class Videos {
         [video.title, video.description, video.thumbnail, video.videoId, video.type, video.category, video.author, video.date, video.status, +videoId]
       )
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     let videos: Video[] = []
@@ -200,19 +176,17 @@ export default class Videos {
     try {
       videos = await db.query<Video[]>('SELECT * FROM videos ORDER BY date DESC')
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     return new DataSuccess(200, SUCCESS, 'Success', { videos })
   }
 
-  async deleteVideo(headers: IncomingHttpHeaders, videoId: number, next: NextFunction): Promise<DataSuccess<{ videos: Video[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      next(auth.exception)
-      throw null
+  async deleteVideo(headers: IncomingHttpHeaders, videoId: number): Promise<DataSuccess<{ videos: Video[] }>> {
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     let video: Video
@@ -220,20 +194,17 @@ export default class Videos {
     try {
       video = (await db.query<Video[]>('SELECT * FROM videos WHERE id = ?', +videoId))[0]
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     if (!video || !video.id) {
-      next(new RequestException('Video not found'))
-      throw null
+      throw new RequestException('Video not found')
     }
 
     try {
       await db.query('DELETE FROM videos WHERE id = ?', +videoId)
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     let videos: Video[] = []
@@ -241,8 +212,7 @@ export default class Videos {
     try {
       videos = await db.query<Video[]>('SELECT * FROM videos ORDER BY date DESC')
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     return new DataSuccess(200, SUCCESS, 'Success', { videos })

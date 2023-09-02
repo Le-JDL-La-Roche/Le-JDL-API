@@ -5,6 +5,7 @@ import { DataHttpResponse } from '$models/responses/http/data-http-response.mode
 import { DefaultHttpResponse } from '$models/responses/http/default-http-response.model'
 import { Authorization } from '$models/data/authorization.model'
 import Authorizations from '$controllers/authorizations.controller'
+import { ControllerException } from '$models/types'
 
 export default class AuthorizationsRouter implements Route {
   router = Router()
@@ -32,9 +33,11 @@ export default class AuthorizationsRouter implements Route {
       `${this.path}`,
       async (req: Request, res: Response<DataHttpResponse<{ authorizations: Authorization[] }>>, next: NextFunction) => {
         try {
-          const resp = await new Authorizations().getAuthorizations(req.headers, next)
+          const resp = await new Authorizations().getAuthorizations(req.headers)
           res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
-        } catch (error) {}
+        } catch (error: unknown) {
+          next(error as ControllerException)
+        }
       }
     )
 
@@ -59,9 +62,11 @@ export default class AuthorizationsRouter implements Route {
       `${this.path}/:id`,
       async (req: Request, res: Response<DataHttpResponse<{ authorization: Authorization }>>, next: NextFunction) => {
         try {
-          const resp = await new Authorizations().getAuthorization(req.headers, +req.params.id, next)
+          const resp = await new Authorizations().getAuthorization(req.headers, +req.params.id)
           res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
-        } catch (error) {}
+        } catch (error: unknown) {
+          next(error as ControllerException)
+        }
       }
     )
 
@@ -91,12 +96,17 @@ export default class AuthorizationsRouter implements Route {
      *       200:
      *         description: Authorization posted
      */
-    this.router.post(`${this.path}`, async (req: Request, res: Response<DataHttpResponse<{ authorizations: Authorization[] }>>, next: NextFunction) => {
-      try {
-        const resp = await new Authorizations().postAuthorization(req.headers, req.body, next)
-        res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
-      } catch (error) {}
-    })
+    this.router.post(
+      `${this.path}`,
+      async (req: Request, res: Response<DataHttpResponse<{ authorizations: Authorization[] }>>, next: NextFunction) => {
+        try {
+          const resp = await new Authorizations().postAuthorization(req.headers, req.body)
+          res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
+        } catch (error: unknown) {
+          next(error as ControllerException)
+        }
+      }
+    )
 
     /**
      * @openapi
@@ -132,9 +142,11 @@ export default class AuthorizationsRouter implements Route {
       `${this.path}/:id`,
       async (req: Request, res: Response<DataHttpResponse<{ authorizations: Authorization[] }>>, next: NextFunction) => {
         try {
-          const resp = await new Authorizations().putAuthorization(req.headers, +req.params.id, req.body, next)
+          const resp = await new Authorizations().putAuthorization(req.headers, +req.params.id, req.body)
           res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
-        } catch (error) {}
+        } catch (error: unknown) {
+          next(error as ControllerException)
+        }
       }
     )
 
@@ -155,11 +167,16 @@ export default class AuthorizationsRouter implements Route {
      *       200:
      *         description: Authorization deleted
      */
-    this.router.delete(`${this.path}/:id`, async (req: Request, res: Response<DataHttpResponse<{authorizations: Authorization[]}>>, next: NextFunction) => {
-      try {
-        const resp = await new Authorizations().deleteAuthorization(req.headers, +req.params.id, next)
-        res.status(resp.httpStatus).send({ code: resp.code, message: resp.message })
-      } catch (error) {}
-    })
+    this.router.delete(
+      `${this.path}/:id`,
+      async (req: Request, res: Response<DataHttpResponse<{ authorizations: Authorization[] }>>, next: NextFunction) => {
+        try {
+          const resp = await new Authorizations().deleteAuthorization(req.headers, +req.params.id)
+          res.status(resp.httpStatus).send({ code: resp.code, message: resp.message })
+        } catch (error: unknown) {
+          next(error as ControllerException)
+        }
+      }
+    )
   }
 }

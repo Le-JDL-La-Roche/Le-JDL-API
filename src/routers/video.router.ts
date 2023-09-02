@@ -2,6 +2,7 @@ import Videos from '$controllers/videos.controller'
 import { Video } from '$models/features/video.model'
 import { Route } from '$models/handle/route.model'
 import { DataHttpResponse } from '$models/responses/http/data-http-response.model'
+import { ControllerException } from '$models/types'
 import { FilesService } from '$services/files.service'
 import { NextFunction, Router } from 'express'
 import { Request, Response } from 'express'
@@ -28,9 +29,11 @@ export default class VideosRouter implements Route {
      */
     this.router.get(`${this.path}`, async (req: Request, res: Response<DataHttpResponse<{ videos: Video[] }>>, next: NextFunction) => {
       try {
-        const resp = await new Videos().getPublishedVideos(next)
+        const resp = await new Videos().getPublishedVideos()
         res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
-      } catch (error) {}
+      } catch (error: unknown) {
+        next(error as ControllerException)
+      }
     })
 
     /**
@@ -48,9 +51,11 @@ export default class VideosRouter implements Route {
      */
     this.router.get(`${this.path}/all`, async (req: Request, res: Response<DataHttpResponse<{ videos: Video[] }>>, next: NextFunction) => {
       try {
-        const resp = await new Videos().getAllVideos(req.headers, next)
+        const resp = await new Videos().getAllVideos(req.headers)
         res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
-      } catch (error) {}
+      } catch (error: unknown) {
+        next(error as ControllerException)
+      }
     })
 
     /**
@@ -72,9 +77,11 @@ export default class VideosRouter implements Route {
      */
     this.router.get(`${this.path}/:id`, async (req: Request, res: Response<DataHttpResponse<{ video: Video }>>, next: NextFunction) => {
       try {
-        const resp = await new Videos().getVideo(req.headers, +req.params.id, next)
+        const resp = await new Videos().getVideo(req.headers, +req.params.id)
         res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
-      } catch (error) {}
+      } catch (error: unknown) {
+        next(error as ControllerException)
+      }
     })
 
     /**
@@ -118,9 +125,11 @@ export default class VideosRouter implements Route {
       new FilesService().uploadVideoThumbnail,
       async (req: Request, res: Response<DataHttpResponse<{ videos: Video[] }>>, next: NextFunction) => {
         try {
-          const resp = await new Videos().postVideo(req.headers, req.body, req.file || null, next)
+          const resp = await new Videos().postVideo(req.headers, req.body, req.file || null)
           res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
-        } catch (error) {}
+        } catch (error: unknown) {
+          next(error as ControllerException)
+        }
       }
     )
 
@@ -169,9 +178,11 @@ export default class VideosRouter implements Route {
       new FilesService().uploadVideoThumbnail,
       async (req: Request, res: Response<DataHttpResponse<{ videos: Video[] }>>, next: NextFunction) => {
         try {
-          const resp = await new Videos().putVideo(req.headers, +req.params.id, req.body, req.file || null, next)
+          const resp = await new Videos().putVideo(req.headers, +req.params.id, req.body, req.file || null)
           res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
-        } catch (error) {}
+        } catch (error: unknown) {
+          next(error as ControllerException)
+        }
       }
     )
 
@@ -194,9 +205,11 @@ export default class VideosRouter implements Route {
      */
     this.router.delete(`${this.path}/:id`, async (req: Request, res: Response<DataHttpResponse<{ videos: Video[] }>>, next: NextFunction) => {
       try {
-        const resp = await new Videos().deleteVideo(req.headers, +req.params.id, next)
+        const resp = await new Videos().deleteVideo(req.headers, +req.params.id)
         res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
-      } catch (error) {}
+      } catch (error: unknown) {
+        next(error as ControllerException)
+      }
     })
   }
 }

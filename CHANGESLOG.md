@@ -1,11 +1,14 @@
 # Mises à jour de l'API
 
 ### 1<sup>er</sup> septembre 2023 `v2.0.0`
-- Migration vers Node.js avec Express.js (PHP -> Node.js)
-- Mise en place de Socket.io
 - Amélioration du système de direct Webradio
+- Création d'un agenda
+- Mise en place de Socket.io
+- Migration vers Node.js avec Express.js (PHP -> Node.js)
 - Optimisation du code
 - *Open source*
+- Fonctions administrateur
+- Corrections de bugs
 
 ### 9 décembre 2022 `v1.7.0`
 - Mise en place du nouveau système de direct Webradio

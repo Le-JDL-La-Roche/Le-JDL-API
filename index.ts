@@ -7,6 +7,7 @@ import WebradioRouter from '$routers/webradio.router'
 import VideosRouter from '$routers/video.router'
 import ArticlesRouter from '$routers/articles.router'
 import AuthorizationsRouter from '$routers/authorizations.router'
+import AgendaRouter from '$routers/agenda.router'
 
 new App(
   [
@@ -16,6 +17,7 @@ new App(
     new WebradioRouter(),
     new VideosRouter(),
     new ArticlesRouter(),
+    new AgendaRouter(),
     new AuthorizationsRouter()
   ],
   [new DefaultSocket()]

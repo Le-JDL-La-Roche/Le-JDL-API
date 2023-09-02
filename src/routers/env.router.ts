@@ -5,6 +5,7 @@ import Env from '$controllers/env.controller'
 import { DataHttpResponse } from '$models/responses/http/data-http-response.model'
 import { DefaultHttpResponse } from '$models/responses/http/default-http-response.model'
 import { Journalist } from '$models/data/journalist.model'
+import { ControllerException } from '$models/types'
 
 export default class EnvRouter implements Route {
   router = Router()
@@ -27,9 +28,11 @@ export default class EnvRouter implements Route {
      */
     this.router.get('/env', async (req: Request, res: Response<DataHttpResponse<any>>, next: NextFunction) => {
       try {
-        const resp = await new Env().getEnv(next)
+        const resp = await new Env().getEnv()
         res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
-      } catch (error) {}
+      } catch (error: unknown) {
+        next(error as ControllerException)
+      }
     })
 
     /**
@@ -45,9 +48,11 @@ export default class EnvRouter implements Route {
      */
     this.router.put('/visits', async (req: Request, res: Response<DefaultHttpResponse>, next: NextFunction) => {
       try {
-        const resp = await new Env().updateVisits(next)
+        const resp = await new Env().updateVisits()
         res.status(resp.httpStatus).send({ code: resp.code, message: resp.message })
-      } catch (error) {}
+      } catch (error: unknown) {
+        next(error as ControllerException)
+      }
     })
 
     /**
@@ -69,9 +74,11 @@ export default class EnvRouter implements Route {
      */
     this.router.delete('/visits/:timestamp', async (req: Request, res: Response<DefaultHttpResponse>, next: NextFunction) => {
       try {
-        const resp = await new Env().deleteAdminVisits(req.headers, +req.params.timestamp, next)
+        const resp = await new Env().deleteAdminVisits(req.headers, +req.params.timestamp)
         res.status(resp.httpStatus).send({ code: resp.code, message: resp.message })
-      } catch (error) {}
+      } catch (error: unknown) {
+        next(error as ControllerException)
+      }
     })
 
     /**
@@ -87,9 +94,11 @@ export default class EnvRouter implements Route {
      */
     this.router.get('/journalists', async (req: Request, res: Response<DataHttpResponse<{ journalists: Journalist[] }>>, next: NextFunction) => {
       try {
-        const resp = await new Env().getJournalists(next)
+        const resp = await new Env().getJournalists()
         res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
-      } catch (error) {}
+      } catch (error: unknown) {
+        next(error as ControllerException)
+      }
     })
 
     /**
@@ -118,9 +127,11 @@ export default class EnvRouter implements Route {
      */
     this.router.post('/journalists', async (req: Request, res: Response<DataHttpResponse<{ journalists: Journalist[] }>>, next: NextFunction) => {
       try {
-        const resp = await new Env().postJournalist(req.headers, req.body, next)
+        const resp = await new Env().postJournalist(req.headers, req.body)
         res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
-      } catch (error) {}
+      } catch (error: unknown) {
+        next(error as ControllerException)
+      }
     })
 
     /**
@@ -155,9 +166,11 @@ export default class EnvRouter implements Route {
       '/journalists/:journalist_id',
       async (req: Request, res: Response<DataHttpResponse<{ journalists: Journalist[] }>>, next: NextFunction) => {
         try {
-          const resp = await new Env().putJournalist(req.headers, +req.params.journalist_id, req.body, next)
+          const resp = await new Env().putJournalist(req.headers, +req.params.journalist_id, req.body)
           res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
-        } catch (error) {}
+        } catch (error: unknown) {
+          next(error as ControllerException)
+        }
       }
     )
 
@@ -182,9 +195,11 @@ export default class EnvRouter implements Route {
       '/journalists/:journalist_id',
       async (req: Request, res: Response<DataHttpResponse<{ journalists: Journalist[] }>>, next: NextFunction) => {
         try {
-          const resp = await new Env().deleteJournalist(req.headers, +req.params.journalist_id, next)
+          const resp = await new Env().deleteJournalist(req.headers, +req.params.journalist_id)
           res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
-        } catch (error) {}
+        } catch (error: unknown) {
+          next(error as ControllerException)
+        }
       }
     )
   }

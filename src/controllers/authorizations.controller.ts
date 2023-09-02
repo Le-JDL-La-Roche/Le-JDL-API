@@ -1,6 +1,6 @@
 import db from '$utils/database'
 import { AuthService } from '$services/auth.service'
-import { SUCCESS, count } from '$models/types'
+import { ControllerException, SUCCESS, count } from '$models/types'
 import { DBException } from '$responses/exceptions/db-exception.response'
 import { DataSuccess } from '$responses/success/data-success.response'
 import { NextFunction } from 'express'
@@ -11,12 +11,11 @@ import { ArticleAuthorization, Authorization, Guest, VideoAuthorization, Webradi
 import { RequestException } from '$responses/exceptions/request-exception.response'
 
 export default class Authorizations {
-  async getAuthorizations(headers: IncomingHttpHeaders, next: NextFunction): Promise<DataSuccess<{ authorizations: Authorization[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      next(auth.exception)
-      throw null
+  async getAuthorizations(headers: IncomingHttpHeaders): Promise<DataSuccess<{ authorizations: Authorization[] }>> {
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     let authorizations: Authorization[] = []
@@ -24,23 +23,17 @@ export default class Authorizations {
     try {
       authorizations = await db.query<Authorization[]>('SELECT * FROM authorizations')
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     return new DataSuccess(200, SUCCESS, 'Success', { authorizations })
   }
 
-  async getAuthorization(
-    headers: IncomingHttpHeaders,
-    authorizationId: number,
-    next: NextFunction
-  ): Promise<DataSuccess<{ authorization: Authorization }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      next(auth.exception)
-      throw null
+  async getAuthorization(headers: IncomingHttpHeaders, authorizationId: number): Promise<DataSuccess<{ authorization: Authorization }>> {
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     let authorization: Authorization
@@ -48,28 +41,21 @@ export default class Authorizations {
     try {
       authorization = (await db.query<Authorization[]>('SELECT * FROM authorizations WHERE id = ?', +authorizationId))[0]
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     if (!authorization || !authorization.id) {
-      next(new RequestException('Authorization not found'))
-      throw null
+      throw new RequestException('Authorization not found')
     }
 
     return new DataSuccess(200, SUCCESS, 'Success', { authorization })
   }
 
-  async postAuthorization(
-    headers: IncomingHttpHeaders,
-    body: Authorization,
-    next: NextFunction
-  ): Promise<DataSuccess<{ authorizations: Authorization[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      next(auth.exception)
-      throw null
+  async postAuthorization(headers: IncomingHttpHeaders, body: Authorization): Promise<DataSuccess<{ authorizations: Authorization[] }>> {
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     if (
@@ -78,15 +64,13 @@ export default class Authorizations {
       !body.content ||
       typeof body.content !== 'string'
     ) {
-      next(new RequestException('Invalid parameters'))
-      throw null
+      throw new RequestException('Invalid parameters')
     }
 
     try {
       await this.checkElement(body)
     } catch (error) {
-      next(error)
-      throw null
+      throw error
     }
 
     let authorization: count
@@ -99,13 +83,11 @@ export default class Authorizations {
         ])
       )[0]
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     if (authorization.count > 0) {
-      next(new RequestException('Authorization already exists'))
-      throw null
+      throw new RequestException('Authorization already exists')
     }
 
     try {
@@ -115,8 +97,7 @@ export default class Authorizations {
         body.content as string
       ])
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     let authorizations: Authorization[] = []
@@ -124,8 +105,7 @@ export default class Authorizations {
     try {
       authorizations = await db.query<Authorization[]>('SELECT * FROM authorizations')
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     return new DataSuccess(201, SUCCESS, 'Success', { authorizations })
@@ -134,14 +114,12 @@ export default class Authorizations {
   async putAuthorization(
     headers: IncomingHttpHeaders,
     authorizationId: number,
-    body: Authorization,
-    next: NextFunction
+    body: Authorization
   ): Promise<DataSuccess<{ authorizations: Authorization[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      next(auth.exception)
-      throw null
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     let authorization: Authorization
@@ -149,13 +127,11 @@ export default class Authorizations {
     try {
       authorization = (await db.query<Authorization[]>('SELECT* FROM authorizations WHERE id = ?', +authorizationId))[0]
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     if (!authorization || !authorization.id) {
-      next(new RequestException('Authorization not found'))
-      throw null
+      throw new RequestException('Authorization not found')
     }
 
     if (
@@ -165,15 +141,13 @@ export default class Authorizations {
       body.elementType !== 'article' &&
       body.elementType !== 'guest'
     ) {
-      next(new RequestException('Invalid parameters'))
-      throw null
+      throw new RequestException('Invalid parameters')
     }
 
     try {
       await this.checkElement(body)
     } catch (error) {
-      next(error)
-      throw null
+      throw error
     }
 
     authorization = {
@@ -190,8 +164,7 @@ export default class Authorizations {
         authorizationId
       ])
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     let authorizations: Authorization[] = []
@@ -199,19 +172,17 @@ export default class Authorizations {
     try {
       authorizations = await db.query<Authorization[]>('SELECT * FROM authorizations')
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     return new DataSuccess(200, SUCCESS, 'Success', { authorizations })
   }
 
-  async deleteAuthorization(headers: IncomingHttpHeaders, authorizationId: number, next: NextFunction): Promise<DataSuccess<{authorizations: Authorization[]}>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      next(auth.exception)
-      throw null
+  async deleteAuthorization(headers: IncomingHttpHeaders, authorizationId: number): Promise<DataSuccess<{ authorizations: Authorization[] }>> {
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     let authorization: Authorization
@@ -219,20 +190,17 @@ export default class Authorizations {
     try {
       authorization = (await db.query<Authorization[]>('SELECT* FROM authorizations WHERE id = ?', +authorizationId))[0]
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     if (!authorization || !authorization.id) {
-      next(new RequestException('Authorization not found'))
-      throw null
+      throw new RequestException('Authorization not found')
     }
 
     try {
       await db.query('DELETE FROM authorizations WHERE id = ?', authorizationId)
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     let authorizations: Authorization[] = []
@@ -240,8 +208,7 @@ export default class Authorizations {
     try {
       authorizations = await db.query<Authorization[]>('SELECT * FROM authorizations')
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     return new DataSuccess(200, SUCCESS, 'Success', { authorizations })

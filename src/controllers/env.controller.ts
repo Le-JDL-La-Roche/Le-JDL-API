@@ -1,5 +1,5 @@
 import db from '$utils/database'
-import { SUCCESS, count } from '$models/types'
+import { ControllerException, SUCCESS, count } from '$models/types'
 import { DataSuccess } from '$responses/success/data-success.response'
 import { NextFunction } from 'express'
 import { DBException } from '$responses/exceptions/db-exception.response'
@@ -11,12 +11,11 @@ import { RequestException } from '$responses/exceptions/request-exception.respon
 import { Journalist } from '$models/data/journalist.model'
 
 export default class Env {
-  async getEnv(next: NextFunction): Promise<DataSuccess<{ visits: Visits; shows: Shows; videos: Videos; articles: Articles }>> {
+  async getEnv(): Promise<DataSuccess<{ visits: Visits; shows: Shows; videos: Videos; articles: Articles }>> {
     try {
       await this.updateDb()
     } catch (error) {
-      next(error)
-      throw null
+      throw error
     }
 
     let visits: Visits = { total: 0, visits: [] }
@@ -52,8 +51,7 @@ export default class Env {
       articles.category.tech = (await db.query<count[]>("SELECT COUNT(*) AS count FROM articles WHERE category = 'tech'"))[0].count
       articles.category.laroche = (await db.query<count[]>("SELECT COUNT(*) AS count FROM articles WHERE category = 'laroche'"))[0].count
     } catch (error) {
-      next(new DBException())
-      throw null
+      throw new DBException()
     }
 
     if (!visits.visits[0]) {
@@ -65,7 +63,6 @@ export default class Env {
     }
 
     while (visits.visits[0].timestamp - Date.now() / 1000 >= 86400) {
-      let t = visits.visits[0].timestamp + 86400
       visits.visits.unshift({
         id: visits.visits[0].id + 1,
         timestamp: visits.visits[0].timestamp + 86400,
@@ -89,14 +86,13 @@ export default class Env {
     return new DataSuccess(200, SUCCESS, 'Success', { visits, shows, videos, articles })
   }
 
-  async updateVisits(next: NextFunction): Promise<DefaultSuccess> {
+  async updateVisits(): Promise<DefaultSuccess> {
     let visits: Visits['visits'] = []
 
     try {
       visits = await this.updateDb()
     } catch (error) {
-      next(error)
-      throw null
+      throw error
     }
 
     try {
@@ -105,19 +101,17 @@ export default class Env {
       let tMax = timestamp + 3600
       await db.query('UPDATE visits SET visits = ? WHERE timestamp >= ? AND timestamp <= ?', [visits[0].visits + 1, tMin, tMax])
     } catch (error) {
-      next(new DBException())
-      throw null
+      throw new DBException()
     }
 
     return new DefaultSuccess(200, SUCCESS, 'Success')
   }
 
-  async deleteAdminVisits(headers: IncomingHttpHeaders, timestamp: number, next: NextFunction): Promise<DefaultSuccess> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      next(auth.exception)
-      throw null
+  async deleteAdminVisits(headers: IncomingHttpHeaders, timestamp: number): Promise<DefaultSuccess> {
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     let tMin = timestamp - 3600
@@ -128,16 +122,14 @@ export default class Env {
     try {
       visits = (await db.query<Visits['visits']>('SELECT * FROM visits WHERE timestamp >= ? AND timestamp <= ?', [tMin, tMax]))[0]
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     if (visits && visits.visits > 0) {
       try {
         await db.query('UPDATE visits SET visits = ? WHERE timestamp >= ? AND timestamp <= ?', [visits.visits - 1, tMin, tMax])
       } catch (error) {
-        next(new DBException(undefined, error))
-        throw null
+        throw new DBException(undefined, error)
       }
     }
 
@@ -185,37 +177,33 @@ export default class Env {
     return visits
   }
 
-  async getJournalists(next: NextFunction): Promise<DataSuccess<{ journalists: Journalist[] }>> {
+  async getJournalists(): Promise<DataSuccess<{ journalists: Journalist[] }>> {
     let journalists: Journalist[] = []
 
     try {
       journalists = await db.query<Journalist[]>('SELECT * FROM journalists')
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     return new DataSuccess(200, SUCCESS, 'Success', { journalists })
   }
 
-  async postJournalist(headers: IncomingHttpHeaders, body: Journalist, next: NextFunction): Promise<DataSuccess<{ journalists: Journalist[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      next(auth.exception)
-      throw null
+  async postJournalist(headers: IncomingHttpHeaders, body: Journalist): Promise<DataSuccess<{ journalists: Journalist[] }>> {
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     if (!body.name || !body.class) {
-      next(new RequestException('Missing parameters'))
-      throw null
+      throw new RequestException('Missing parameters')
     }
 
     try {
       await db.query('INSERT INTO journalists (name, class) VALUES (?, ?)', [body.name, body.class])
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     let journalists: Journalist[] = []
@@ -223,24 +211,17 @@ export default class Env {
     try {
       journalists = await db.query<Journalist[]>('SELECT * FROM journalists')
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     return new DataSuccess(200, SUCCESS, 'Success', { journalists })
   }
 
-  async putJournalist(
-    headers: IncomingHttpHeaders,
-    journalistId: number,
-    body: Journalist,
-    next: NextFunction
-  ): Promise<DataSuccess<{ journalists: Journalist[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      next(auth.exception)
-      throw null
+  async putJournalist(headers: IncomingHttpHeaders, journalistId: number, body: Journalist): Promise<DataSuccess<{ journalists: Journalist[] }>> {
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     let journalist: Journalist
@@ -248,13 +229,11 @@ export default class Env {
     try {
       journalist = (await db.query<Journalist[]>('SELECT * FROM journalists WHERE id = ?', journalistId))[0]
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     if (!journalist) {
-      next(new RequestException('Journalist not found'))
-      throw null
+      throw new RequestException('Journalist not found')
     }
 
     try {
@@ -264,8 +243,7 @@ export default class Env {
         journalistId
       ])
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     let journalists: Journalist[] = []
@@ -273,23 +251,17 @@ export default class Env {
     try {
       journalists = await db.query<Journalist[]>('SELECT * FROM journalists')
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     return new DataSuccess(200, SUCCESS, 'Success', { journalists })
   }
 
-  async deleteJournalist(
-    headers: IncomingHttpHeaders,
-    journalistId: number,
-    next: NextFunction
-  ): Promise<DataSuccess<{ journalists: Journalist[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      next(auth.exception)
-      throw null
+  async deleteJournalist(headers: IncomingHttpHeaders, journalistId: number): Promise<DataSuccess<{ journalists: Journalist[] }>> {
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     let journalist: Journalist
@@ -297,20 +269,17 @@ export default class Env {
     try {
       journalist = (await db.query<Journalist[]>('SELECT * FROM journalists WHERE id = ?', journalistId))[0]
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     if (!journalist) {
-      next(new RequestException('Journalist not found'))
-      throw null
+      throw new RequestException('Journalist not found')
     }
 
     try {
       await db.query('DELETE FROM journalists WHERE id = ?', journalistId)
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     let journalists: Journalist[] = []
@@ -318,8 +287,7 @@ export default class Env {
     try {
       journalists = await db.query<Journalist[]>('SELECT * FROM journalists')
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     return new DataSuccess(200, SUCCESS, 'Success', { journalists })

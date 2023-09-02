@@ -10,7 +10,7 @@ import multer from 'multer'
 import { FilesService } from '$services/files.service'
 import nexter from '$utils/nexter'
 import { AuthService } from '$services/auth.service'
-import { AUTH_ERROR, CLIENT_ERROR } from '$models/types'
+import { AUTH_ERROR, CLIENT_ERROR, ControllerException } from '$models/types'
 import { WebradioQuestion } from '$models/features/webradio-question.model'
 
 export default class WebradioRouter implements Route {
@@ -35,9 +35,11 @@ export default class WebradioRouter implements Route {
      */
     this.router.get(`${this.path}/shows`, async (req: Request, res: Response<DataHttpResponse<{ shows: WebradioShow[] }>>, next: NextFunction) => {
       try {
-        const resp = await new Webradio().getPublishedWebradioShows(next)
+        const resp = await new Webradio().getPublishedWebradioShows()
         res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
-      } catch (error) {}
+      } catch (error: unknown) {
+        next(error as ControllerException)
+      }
     })
 
     /**
@@ -55,13 +57,15 @@ export default class WebradioRouter implements Route {
       `${this.path}/shows/current`,
       async (req: Request, res: Response<DataHttpResponse<{ show: WebradioShow }>>, next: NextFunction) => {
         try {
-          const resp = await new Webradio().getCurrentWebradioShow(next)
+          const resp = await new Webradio().getCurrentWebradioShow()
           if (resp.data) {
             res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
           } else {
             res.status(resp.httpStatus).send({ code: resp.code, message: resp.message })
           }
-        } catch (error) {}
+        } catch (error: unknown) {
+          next(error as ControllerException)
+        }
       }
     )
 
@@ -82,9 +86,11 @@ export default class WebradioRouter implements Route {
       `${this.path}/shows/all`,
       async (req: Request, res: Response<DataHttpResponse<{ shows: WebradioShow[] }>>, next: NextFunction) => {
         try {
-          const resp = await new Webradio().getAllWebradioShows(req.headers, next)
+          const resp = await new Webradio().getAllWebradioShows(req.headers)
           res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
-        } catch (error) {}
+        } catch (error: unknown) {
+          next(error as ControllerException)
+        }
       }
     )
 
@@ -107,9 +113,11 @@ export default class WebradioRouter implements Route {
      */
     this.router.get(`${this.path}/shows/:id`, async (req: Request, res: Response<DataHttpResponse<{ show: WebradioShow }>>, next: NextFunction) => {
       try {
-        const resp = await new Webradio().getWebradioShow(req.headers, +req.params.id, next)
+        const resp = await new Webradio().getWebradioShow(req.headers, +req.params.id)
         res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
-      } catch (error) {}
+      } catch (error: unknown) {
+        next(error as ControllerException)
+      }
     })
 
     /**
@@ -151,9 +159,11 @@ export default class WebradioRouter implements Route {
       new FilesService().uploadWebradioThumbnail,
       async (req: Request<any>, res: Response<DataHttpResponse<{ shows: WebradioShow[] }>>, next: NextFunction) => {
         try {
-          const resp = await new Webradio().postWebradioShow(req.headers, req.body, req.file || null, next)
+          const resp = await new Webradio().postWebradioShow(req.headers, req.body, req.file || null)
           res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
-        } catch (error) {}
+        } catch (error: unknown) {
+          next(error as ControllerException)
+        }
       }
     )
 
@@ -200,9 +210,11 @@ export default class WebradioRouter implements Route {
       new FilesService().uploadWebradioThumbnail,
       async (req: Request, res: Response<DataHttpResponse<{ shows: WebradioShow[] }>>, next: NextFunction) => {
         try {
-          const resp = await new Webradio().putWebradioShow(req.headers, +req.params.id, req.body, req.file || null, next)
+          const resp = await new Webradio().putWebradioShow(req.headers, +req.params.id, req.body, req.file || null)
           res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
-        } catch (error) {}
+        } catch (error: unknown) {
+          next(error as ControllerException)
+        }
       }
     )
 
@@ -227,9 +239,11 @@ export default class WebradioRouter implements Route {
       `${this.path}/shows/:id`,
       async (req: Request, res: Response<DataHttpResponse<{ shows: WebradioShow[] }>>, next: NextFunction) => {
         try {
-          const resp = await new Webradio().deleteWebradioShow(req.headers, +req.params.id, next)
+          const resp = await new Webradio().deleteWebradioShow(req.headers, +req.params.id)
           res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
-        } catch (error) {}
+        } catch (error: unknown) {
+          next(error as ControllerException)
+        }
       }
     )
 
@@ -248,13 +262,15 @@ export default class WebradioRouter implements Route {
       `${this.path}/questions/current`,
       async (req: Request, res: Response<DataHttpResponse<{ questions: WebradioQuestion[] }>>, next: NextFunction) => {
         try {
-          const resp = await new Webradio().getCurrentShowQuestions(next)
+          const resp = await new Webradio().getCurrentShowQuestions()
           if (resp.data) {
             res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
           } else {
             res.status(resp.httpStatus).send({ code: resp.code, message: resp.message })
           }
-        } catch (error) {}
+        } catch (error: unknown) {
+          next(error as ControllerException)
+        }
       }
     )
 
@@ -282,13 +298,15 @@ export default class WebradioRouter implements Route {
       `${this.path}/questions`,
       async (req: Request, res: Response<DataHttpResponse<{ questions: WebradioQuestion[] }>>, next: NextFunction) => {
         try {
-          const resp = await new Webradio().postQuestion(req.body, next)
+          const resp = await new Webradio().postQuestion(req.body)
           if (resp.data) {
             res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
           } else {
             res.status(resp.httpStatus).send({ code: resp.code, message: resp.message })
           }
-        } catch (error) {}
+        } catch (error: unknown) {
+          next(error as ControllerException)
+        }
       }
     )
 
@@ -313,13 +331,15 @@ export default class WebradioRouter implements Route {
       `${this.path}/questions/:id`,
       async (req: Request, res: Response<DataHttpResponse<{ questions: WebradioQuestion[] }>>, next: NextFunction) => {
         try {
-          const resp = await new Webradio().deleteQuestion(req.headers, +req.params.id, next)
+          const resp = await new Webradio().deleteQuestion(req.headers, +req.params.id)
           if (resp.data) {
             res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
           } else {
             res.status(resp.httpStatus).send({ code: resp.code, message: resp.message })
           }
-        } catch (error) {}
+        } catch (error: unknown) {
+          next(error as ControllerException)
+        }
       }
     )
   }

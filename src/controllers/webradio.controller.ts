@@ -1,5 +1,5 @@
 import db from '$utils/database'
-import { SUCCESS } from '$models/types'
+import { ControllerException, SUCCESS } from '$models/types'
 import { DataSuccess } from '$responses/success/data-success.response'
 import { NextFunction } from 'express'
 import { DBException } from '$responses/exceptions/db-exception.response'
@@ -11,27 +11,25 @@ import { RequestException } from '$responses/exceptions/request-exception.respon
 import { WebradioQuestion } from '$models/features/webradio-question.model'
 
 export default class Webradio {
-  async getPublishedWebradioShows(next: NextFunction): Promise<DataSuccess<{ shows: WebradioShow[] }>> {
+  async getPublishedWebradioShows(): Promise<DataSuccess<{ shows: WebradioShow[] }>> {
     let webradioShows: WebradioShow[] = []
 
     try {
       webradioShows = await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = 2 ORDER BY date DESC')
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     return new DataSuccess(200, SUCCESS, 'Success', { shows: webradioShows })
   }
 
-  async getCurrentWebradioShow(next: NextFunction): Promise<DataSuccess<{ show: WebradioShow } | null>> {
+  async getCurrentWebradioShow(): Promise<DataSuccess<{ show: WebradioShow } | null>> {
     let webradioShow: WebradioShow
 
     try {
       webradioShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = -1 OR status = 0 ORDER BY date DESC'))[0]
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     if (webradioShow && webradioShow.id) {
@@ -41,12 +39,11 @@ export default class Webradio {
     }
   }
 
-  async getAllWebradioShows(headers: IncomingHttpHeaders, next: NextFunction): Promise<DataSuccess<{ shows: WebradioShow[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      next(auth.exception)
-      throw null
+  async getAllWebradioShows(headers: IncomingHttpHeaders): Promise<DataSuccess<{ shows: WebradioShow[] }>> {
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     let webradioShows: WebradioShow[] = []
@@ -54,34 +51,30 @@ export default class Webradio {
     try {
       webradioShows = await db.query<WebradioShow[]>('SELECT * FROM webradio_shows ORDER BY date DESC')
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     return new DataSuccess(200, SUCCESS, 'Success', { shows: webradioShows })
   }
 
-  async getWebradioShow(headers: IncomingHttpHeaders, showId: number, next: NextFunction): Promise<DataSuccess<{ show: WebradioShow }>> {
+  async getWebradioShow(headers: IncomingHttpHeaders, showId: number): Promise<DataSuccess<{ show: WebradioShow }>> {
     let webradioShow: WebradioShow
 
     try {
       webradioShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE id = ?', +showId))[0]
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     if (!webradioShow || !webradioShow.id) {
-      next(new RequestException('Show not found'))
-      throw null
+      throw new RequestException('Show not found')
     }
 
     if (webradioShow.status != -1 && webradioShow.status != 0 && webradioShow.status != 2) {
-      const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-      if (!auth.status) {
-        next(auth.exception)
-        throw null
+      try {
+        nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+      } catch (error: unknown) {
+        throw error as ControllerException
       }
     }
 
@@ -91,24 +84,20 @@ export default class Webradio {
   async postWebradioShow(
     headers: IncomingHttpHeaders,
     body: WebradioShow,
-    file: Express.Multer.File | null,
-    next: NextFunction
+    file: Express.Multer.File | null
   ): Promise<DataSuccess<{ shows: WebradioShow[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      next(auth.exception)
-      throw null
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     if (!body.title || !body.description || !file || !body.streamId || !body.date || !body.status) {
-      next(new RequestException('Missing parameters'))
-      throw null
+      throw new RequestException('Missing parameters')
     }
 
     if (+body.status != -2 && +body.status != -1 && +body.status != 0 && +body.status != 1 && +body.status != 2) {
-      next(new RequestException('Invalid parameters'))
-      throw null
+      throw new RequestException('Invalid parameters')
     }
 
     let liveShow: WebradioShow
@@ -116,13 +105,11 @@ export default class Webradio {
     try {
       liveShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = -1 OR status = 0'))[0]
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
-    if (liveShow && liveShow.id && (+body.status != -1 ||  +body.status == 0)) {
-      next(new RequestException('A show is already live'))
-      throw null
+    if (liveShow && liveShow.id && (+body.status != -1 || +body.status == 0)) {
+      throw new RequestException('A show is already live')
     }
 
     try {
@@ -136,8 +123,7 @@ export default class Webradio {
         +body.status
       ])
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     let webradioShows: WebradioShow[] = []
@@ -145,8 +131,7 @@ export default class Webradio {
     try {
       webradioShows = await db.query<WebradioShow[]>('SELECT * FROM webradio_shows ORDER BY date DESC')
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     return new DataSuccess(200, SUCCESS, 'Success', { shows: webradioShows })
@@ -156,14 +141,12 @@ export default class Webradio {
     headers: IncomingHttpHeaders,
     showId: number,
     body: WebradioShow,
-    file: Express.Multer.File | null,
-    next: NextFunction
+    file: Express.Multer.File | null
   ): Promise<DataSuccess<{ shows: WebradioShow[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      next(auth.exception)
-      throw null
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     let webradioShow: WebradioShow
@@ -171,18 +154,23 @@ export default class Webradio {
     try {
       webradioShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE id = ?', +showId))[0]
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     if (!webradioShow || !webradioShow.id) {
-      next(new RequestException('Show not found'))
-      throw null
+      throw new RequestException('Show not found')
     }
 
-    if (body.status != null && body.status != undefined && +body.status != -2 && +body.status != -1 && +body.status != 0 && +body.status != 1 && +body.status != 2) {
-      next(new RequestException('Invalid parameters'))
-      throw null
+    if (
+      body.status != null &&
+      body.status != undefined &&
+      +body.status != -2 &&
+      +body.status != -1 &&
+      +body.status != 0 &&
+      +body.status != 1 &&
+      +body.status != 2
+    ) {
+      throw new RequestException('Invalid parameters')
     }
 
     let liveShow: WebradioShow
@@ -190,13 +178,11 @@ export default class Webradio {
     try {
       liveShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = -1 OR status = 0'))[0]
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     if (liveShow && liveShow.id && liveShow.id != webradioShow.id && (+body.status == -1 || +body.status == 0)) {
-      next(new RequestException('A show is already live'))
-      throw null
+      throw new RequestException('A show is already live')
     }
 
     webradioShow = {
@@ -224,8 +210,7 @@ export default class Webradio {
         ]
       )
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     let webradioShows: WebradioShow[] = []
@@ -233,19 +218,17 @@ export default class Webradio {
     try {
       webradioShows = await db.query<WebradioShow[]>('SELECT * FROM webradio_shows ORDER BY date DESC')
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     return new DataSuccess(200, SUCCESS, 'Success', { shows: webradioShows })
   }
 
-  async deleteWebradioShow(headers: IncomingHttpHeaders, showId: number, next: NextFunction): Promise<DataSuccess<{ shows: WebradioShow[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      next(auth.exception)
-      throw null
+  async deleteWebradioShow(headers: IncomingHttpHeaders, showId: number): Promise<DataSuccess<{ shows: WebradioShow[] }>> {
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     let webradioShow: WebradioShow
@@ -253,20 +236,17 @@ export default class Webradio {
     try {
       webradioShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE id = ?', +showId))[0]
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     if (!webradioShow || !webradioShow.id) {
-      next(new RequestException('Show not found'))
-      throw null
+      throw new RequestException('Show not found')
     }
 
     try {
       await db.query('DELETE FROM webradio_shows WHERE id = ?', +showId)
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     let webradioShows: WebradioShow[] = []
@@ -274,21 +254,19 @@ export default class Webradio {
     try {
       webradioShows = await db.query<WebradioShow[]>('SELECT * FROM webradio_shows ORDER BY date DESC')
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     return new DataSuccess(200, SUCCESS, 'Success', { shows: webradioShows })
   }
 
-  async getCurrentShowQuestions(next: NextFunction): Promise<DataSuccess<{ questions: WebradioQuestion[] }>> {
+  async getCurrentShowQuestions(): Promise<DataSuccess<{ questions: WebradioQuestion[] }>> {
     let webradioShow: WebradioShow
 
     try {
       webradioShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = -1 OR status = 0'))[0]
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     if (!webradioShow || !webradioShow.id) {
@@ -300,17 +278,15 @@ export default class Webradio {
     try {
       webradioShowQuestions = await db.query<WebradioQuestion[]>('SELECT * FROM webradio_shows_questions WHERE show_id = ?', +webradioShow.id)
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     return new DataSuccess(200, SUCCESS, 'Success', { questions: webradioShowQuestions })
   }
 
-  async postQuestion(body: WebradioQuestion, next: NextFunction): Promise<DataSuccess<{ questions: WebradioQuestion[] }>> {
+  async postQuestion(body: WebradioQuestion): Promise<DataSuccess<{ questions: WebradioQuestion[] }>> {
     if (!body.question || !body.question.replace(/\s/g, '').length) {
-      next(new RequestException('Invalid parameters'))
-      throw null
+      throw new RequestException('Invalid parameters')
     }
 
     body.question = body.question.trim()
@@ -320,8 +296,7 @@ export default class Webradio {
     try {
       webradioShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = -1 OR status = 0'))[0]
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     if (!webradioShow || !webradioShow.id) {
@@ -335,8 +310,7 @@ export default class Webradio {
         Math.round(Date.now() / 1000)
       ])
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     let webradioShowQuestions: WebradioQuestion[] = []
@@ -344,30 +318,23 @@ export default class Webradio {
     try {
       webradioShowQuestions = await db.query<WebradioQuestion[]>('SELECT * FROM webradio_shows_questions WHERE show_id = ?', +webradioShow.id)
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     return new DataSuccess(200, SUCCESS, 'Success', { questions: webradioShowQuestions })
   }
 
-  async deleteQuestion(
-    headers: IncomingHttpHeaders,
-    questionId: number,
-    next: NextFunction
-  ): Promise<DataSuccess<{ questions: WebradioQuestion[] }>> {
-    const auth = nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-
-    if (!auth.status) {
-      next(auth.exception)
-      throw null
+  async deleteQuestion(headers: IncomingHttpHeaders, questionId: number): Promise<DataSuccess<{ questions: WebradioQuestion[] }>> {
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
     }
 
     try {
       await db.query('DELETE FROM webradio_shows_questions WHERE id = ?', +questionId)
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     let webradioShowQuestions: WebradioQuestion[] = []
@@ -375,8 +342,7 @@ export default class Webradio {
     try {
       webradioShowQuestions = await db.query<WebradioQuestion[]>('SELECT * FROM webradio_shows_questions WHERE id = ?', questionId)
     } catch (error) {
-      next(new DBException(undefined, error))
-      throw null
+      throw new DBException(undefined, error)
     }
 
     return new DataSuccess(200, SUCCESS, 'Success', { questions: webradioShowQuestions })
