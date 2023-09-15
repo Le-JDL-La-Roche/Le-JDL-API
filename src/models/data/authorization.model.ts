@@ -10,7 +10,7 @@ export interface WebradioAuthorization {
   subject: string
   date: string
   estimatedDuration: string
-  inGuests: { name: string; status: string; authorization: boolean }[]
+  inGuests: Guest[]
   outGuests: Guest[]
   synopsis: string
 }
@@ -21,7 +21,7 @@ export interface VideoAuthorization {
   medium: string
   author: string
   duration: number
-  inGuests: { name: string; status: string; authorization: boolean }[]
+  inGuests: Guest[]
   outGuests: Guest[]
   synopsis: string
 }
@@ -37,6 +37,7 @@ export interface Guest {
   name: string | null
   status: string
   authorization: boolean
+  authorizationType: 'M' | 'm' | false
   eventType: "l'émission de radio" | "l'enregistrement vidéo" | string
   date: string
   place: 'au Lycée La Rochefoucauld (75007 PARIS)' | 'en visioconférence' | string
