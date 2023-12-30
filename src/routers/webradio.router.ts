@@ -203,6 +203,8 @@ export default class WebradioRouter implements Route {
      *                 type: string
      *               thumbnail:
      *                 type: file
+     *               prompter:
+     *                 type: string
      *     responses:
      *       200:
      *         description: Show updated
@@ -242,73 +244,6 @@ export default class WebradioRouter implements Route {
       async (req: Request, res: Response<DataHttpResponse<{ shows: WebradioShow[] }>>, next: NextFunction) => {
         try {
           const resp = await new Webradio().deleteWebradioShow(req.headers, +req.params.id)
-          res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
-        } catch (error: unknown) {
-          next(error as ControllerException)
-        }
-      }
-    )
-
-    /**
-     * @openapi
-     * /webradio/prompter/{show_id}:
-     *   get:
-     *     tags:
-     *       - Webradio
-     *     security:
-     *       - bearer: []
-     *     summary: Get prompter by show ID
-     *     parameters:
-     *       - in: path
-     *         name: show_id
-     *         required: true
-     *     responses:
-     *       200:
-     *         description: Prompter
-     */
-    this.router.get(
-      `${this.path}/prompter/:id`,
-      async (req: Request, res: Response<DataHttpResponse<WebradioShow & { prompter: string }>>, next: NextFunction) => {
-        try {
-          const resp = await new Webradio().getPrompter(req.headers, +req.params.id)
-          res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
-        } catch (error: unknown) {
-          next(error as ControllerException)
-        }
-      }
-    )
-
-    /**
-     * @openapi
-     * /webradio/prompter/{show_id}:
-     *   put:
-     *     tags:
-     *       - Webradio
-     *     security:
-     *       - bearer: []
-     *     summary: Put a prompter by show ID
-     *     parameters:
-     *       - in: path
-     *         name: show_id
-     *         required: true
-     *     requestBody:
-     *       required: false
-     *       content:
-     *         application/x-www-form-urlencoded:
-     *           schema:
-     *             type: object
-     *             properties:
-     *               prompter:
-     *                 type: string
-     *     responses:
-     *       200:
-     *         description: Prompter
-     */
-    this.router.put(
-      `${this.path}/prompter/:id`,
-      async (req: Request, res: Response<DataHttpResponse<WebradioShow & { prompter: string }>>, next: NextFunction) => {
-        try {
-          const resp = await new Webradio().putPrompter(req.headers, +req.params.id, req.body)
           res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
         } catch (error: unknown) {
           next(error as ControllerException)
