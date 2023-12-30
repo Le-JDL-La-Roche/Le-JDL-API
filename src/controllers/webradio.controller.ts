@@ -9,6 +9,8 @@ import nexter from '$utils/nexter'
 import { AuthService } from '$services/auth.service'
 import { RequestException } from '$responses/exceptions/request-exception.response'
 import { WebradioQuestion } from '$models/features/webradio-question.model'
+import { WebradioPrompter } from '$models/features/webradio-prompter.model'
+import { ResultSetHeader } from 'mysql2/promise'
 
 export default class Webradio {
   async getPublishedWebradioShows(): Promise<DataSuccess<{ shows: WebradioShow[] }>> {
@@ -27,7 +29,11 @@ export default class Webradio {
     let webradioShow: WebradioShow
 
     try {
-      webradioShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = -1 OR status = 0 OR status = -1.5 OR status = 0.5 ORDER BY date DESC'))[0]
+      webradioShow = (
+        await db.query<WebradioShow[]>(
+          'SELECT * FROM webradio_shows WHERE status = -1 OR status = 0 OR status = -1.5 OR status = 0.5 ORDER BY date DESC'
+        )
+      )[0]
     } catch (error) {
       throw new DBException(undefined, error)
     }
@@ -83,7 +89,7 @@ export default class Webradio {
 
   async postWebradioShow(
     headers: IncomingHttpHeaders,
-    body: WebradioShow,
+    body: WebradioShow & { prompter?: string },
     file: Express.Multer.File | null
   ): Promise<DataSuccess<{ shows: WebradioShow[] }>> {
     try {
@@ -121,16 +127,20 @@ export default class Webradio {
       throw new RequestException('A show is already live')
     }
 
+    let webradioShowInsert: ResultSetHeader
+
     try {
-      await db.query('INSERT INTO webradio_shows (title, description, thumbnail, stream_id, podcast_id, date, status) VALUES (?, ?, ?, ?, ?, ?, ?)', [
-        body.title + '',
-        body.description + '',
-        file.filename + '',
-        body.streamId + '',
-        body.podcastId + '',
-        body.date + '',
-        +body.status
-      ])
+      webradioShowInsert = await db.query(
+        'INSERT INTO webradio_shows (title, description, thumbnail, stream_id, podcast_id, date, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [body.title + '', body.description + '', file.filename + '', body.streamId + '', body.podcastId + '', body.date + '', +body.status]
+      )
+    } catch (error) {
+      throw new DBException(undefined, error)
+    }
+
+
+    try {
+      await db.query('INSERT INTO webradio_shows_prompters (show_id, prompter) VALUES (?, ?)', [webradioShowInsert.insertId!, body.prompter || ''])
     } catch (error) {
       throw new DBException(undefined, error)
     }
@@ -193,7 +203,12 @@ export default class Webradio {
       throw new DBException(undefined, error)
     }
 
-    if (liveShow && liveShow.id && liveShow.id != webradioShow.id && (+body.status == -1 || +body.status == 0 || +body.status == -1.5 || +body.status == 0.5)) {
+    if (
+      liveShow &&
+      liveShow.id &&
+      liveShow.id != webradioShow.id &&
+      (+body.status == -1 || +body.status == 0 || +body.status == -1.5 || +body.status == 0.5)
+    ) {
       throw new RequestException('A show is already live')
     }
 
@@ -270,6 +285,70 @@ export default class Webradio {
     }
 
     return new DataSuccess(200, SUCCESS, 'Success', { shows: webradioShows })
+  }
+
+  async getPrompter(headers: IncomingHttpHeaders, showId: number): Promise<DataSuccess<WebradioShow & { prompter: string }>> {
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
+    }
+
+    let webradioShow: WebradioShow
+    let webradioShowPrompter: WebradioPrompter
+
+    try {
+      webradioShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE id = ?', +showId))[0]
+    } catch (error) {
+      throw new DBException(undefined, error)
+    }
+
+    try {
+      webradioShowPrompter = (await db.query<WebradioPrompter[]>('SELECT * FROM webradio_shows_prompters WHERE show_id = ?', +showId))[0]
+    } catch (error) {
+      throw new DBException(undefined, error)
+    }
+
+    if (!webradioShow || !webradioShow.id || !webradioShowPrompter || !webradioShowPrompter.id) {
+      throw new RequestException('Prompter not found')
+    }
+
+    return new DataSuccess(200, SUCCESS, 'Success', {...webradioShow, prompter: webradioShowPrompter.prompter })
+  }
+
+  async putPrompter(headers: IncomingHttpHeaders, showId: number, body: { prompter: string }): Promise<DataSuccess<WebradioShow & { prompter: string }>> {
+    try {
+      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
+    } catch (error: unknown) {
+      throw error as ControllerException
+    }
+
+    let webradioShow: WebradioShow
+    let webradioShowPrompter: WebradioPrompter
+
+    try {
+      webradioShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE id = ?', +showId))[0]
+    } catch (error) {
+      throw new DBException(undefined, error)
+    }
+
+    try {
+      webradioShowPrompter = (await db.query<WebradioPrompter[]>('SELECT * FROM webradio_shows_prompters WHERE show_id = ?', +showId))[0]
+    } catch (error) {
+      throw new DBException(undefined, error)
+    }
+
+    if (!webradioShow || !webradioShow.id || !webradioShowPrompter || !webradioShowPrompter.id) {
+      throw new RequestException('Prompter not found')
+    }
+
+    try {
+      await db.query('UPDATE webradio_shows_prompters SET prompter = ? WHERE show_id = ?', [body.prompter, +showId])
+    } catch (error) {
+      throw new DBException(undefined, error)
+    }
+
+    return new DataSuccess(200, SUCCESS, 'Success', {...webradioShow, prompter: body.prompter })
   }
 
   async getCurrentShowQuestions(): Promise<DataSuccess<{ questions: WebradioQuestion[] }>> {
