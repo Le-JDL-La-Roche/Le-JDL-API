@@ -21,6 +21,10 @@ export default class Webradio {
       throw new DBException(undefined, error)
     }
 
+    for (let i = 0; i < webradioShows.length; i++) {
+      delete webradioShows[i].prompter
+    }
+
     return new DataSuccess(200, SUCCESS, 'Success', { shows: webradioShows })
   }
 
@@ -38,6 +42,7 @@ export default class Webradio {
     }
 
     if (webradioShow && webradioShow.id) {
+      delete webradioShow.prompter
       return new DataSuccess(200, SUCCESS, 'Success', { show: webradioShow })
     } else {
       return new DataSuccess(200, SUCCESS, 'No show', null)
@@ -81,6 +86,10 @@ export default class Webradio {
       } catch (error: unknown) {
         throw error as ControllerException
       }
+    }
+
+    if (!(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer')).status) {
+      delete webradioShow.prompter
     }
 
     return new DataSuccess(200, SUCCESS, 'Success', { show: webradioShow })

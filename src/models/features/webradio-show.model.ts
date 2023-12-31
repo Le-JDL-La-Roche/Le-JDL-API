@@ -18,5 +18,5 @@ export interface WebradioShow {
    * ` 2` Podcast
    */
   status: -2 | -2.5 | -1 | -1.5 | 0 | 0.5 | 1 | 2
-  prompter: string
+  prompter?: string
 }
