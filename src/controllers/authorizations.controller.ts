@@ -3,12 +3,13 @@ import { AuthService } from '$services/auth.service'
 import { ControllerException, SUCCESS, count } from '$models/types'
 import { DBException } from '$responses/exceptions/db-exception.response'
 import { DataSuccess } from '$responses/success/data-success.response'
-import { NextFunction } from 'express'
 import { IncomingHttpHeaders } from 'http'
-import { DefaultSuccess } from '$responses/success/default-success.response'
 import nexter from '$utils/nexter'
-import { ArticleAuthorization, Authorization, Guest, VideoAuthorization, WebradioAuthorization } from '$models/data/authorization.model'
+import { Authorization } from '$models/data/authorization.model'
 import { RequestException } from '$responses/exceptions/request-exception.response'
+import { WebradioShow } from '$models/features/webradio-show.model'
+import { Video } from '$models/features/video.model'
+import { Article } from '$models/features/article.model'
 
 export default class Authorizations {
   async getAuthorizations(headers: IncomingHttpHeaders): Promise<DataSuccess<{ authorizations: Authorization[] }>> {
@@ -67,8 +68,10 @@ export default class Authorizations {
       throw new RequestException('Invalid parameters')
     }
 
+    let elementId: number
+
     try {
-      await this.checkElement(body)
+      elementId = await this.checkElement(body)
     } catch (error) {
       throw error
     }
@@ -79,7 +82,7 @@ export default class Authorizations {
       authorization = (
         await db.query<count[]>('SELECT COUNT(*) AS count FROM authorizations WHERE element_type = ? AND element_id = ?', [
           body.elementType,
-          body.elementId
+          elementId
         ])
       )[0]
     } catch (error) {
@@ -214,43 +217,76 @@ export default class Authorizations {
     return new DataSuccess(200, SUCCESS, 'Success', { authorizations })
   }
 
-  private async checkElement(body: Authorization): Promise<void> {
+  private async checkElement(body: Authorization): Promise<number> {
     if (body.elementType === 'show') {
-      let show: count
+      let show: WebradioShow
 
-      try {
-        show = (await db.query<count[]>('SELECT COUNT(*) AS count FROM webradio_shows WHERE id = ?', body.elementId))[0]
-      } catch (error) {
-        throw new DBException(undefined, error)
+      if (!body.elementId || +body.elementId === 0) {
+        try {
+          show = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows ORDER BY ID DESC LIMIT 1'))[0]
+        } catch (error) {
+          throw new DBException(undefined, error)
+        }
+      } else {
+        try {
+          show = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE id = ?', body.elementId))[0]
+        } catch (error) {
+          throw new DBException(undefined, error)
+        }
       }
 
-      if (show.count === 0) {
+
+      if (!show || !show.id) {
         throw new RequestException('Show not found')
       }
-    } else if (body.elementType === 'video') {
-      let video: count
 
-      try {
-        video = (await db.query<count[]>('SELECT COUNT(*) AS count FROM videos WHERE id = ?', body.elementId))[0]
-      } catch (error) {
-        throw new DBException(undefined, error)
+      return show.id
+    } else if (body.elementType === 'video') {
+      let video: Video
+
+      if (!body.elementId || +body.elementId === 0) {
+        try {
+          video = (await db.query<Video[]>('SELECT * FROM videos ORDER BY ID DESC LIMIT 1'))[0]
+        } catch (error) {
+          throw new DBException(undefined, error)
+        }
+      } else {
+        try {
+          video = (await db.query<Video[]>('SELECT * FROM videos WHERE id = ?', body.elementId))[0]
+        } catch (error) {
+          throw new DBException(undefined, error)
+        }
       }
 
-      if (video.count === 0) {
+      if (!video || !video.id) {
         throw new RequestException('Video not found')
       }
-    } else if (body.elementType === 'article') {
-      let article: count
 
-      try {
-        article = (await db.query<count[]>('SELECT COUNT(*) AS count FROM articles WHERE id = ?', body.elementId))[0]
-      } catch (error) {
-        throw new DBException(undefined, error)
+      return video.id
+    } else if (body.elementType === 'article') {
+      let article: Article
+
+      if (!body.elementId || +body.elementId === 0) {
+        try {
+          article = (await db.query<Article[]>('SELECT * FROM articles ORDER BY ID DESC LIMIT 1'))[0]
+        } catch (error) {
+          throw new DBException(undefined, error)
+        }
+      } else {
+        try {
+          article = (await db.query<Article[]>('SELECT * FROM articles WHERE id = ?', body.elementId))[0]
+        } catch (error) {
+          throw new DBException(undefined, error)
+        }
       }
 
-      if (article.count === 0) {
+      if (!article || !article.id) {
         throw new RequestException('Article not found')
       }
+
+      return article.id
     }
+
+    return 0
   }
 }

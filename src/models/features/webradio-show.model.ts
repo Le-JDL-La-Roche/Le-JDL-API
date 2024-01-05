@@ -5,6 +5,7 @@ export interface WebradioShow {
   thumbnail: string
   streamId: string
   podcastId?: string
+  date: string
   /**
    * `-2` Draft – `-2.5` Draft restream
    * 
@@ -17,5 +18,5 @@ export interface WebradioShow {
    * ` 2` Podcast
    */
   status: -2 | -2.5 | -1 | -1.5 | 0 | 0.5 | 1 | 2
-  date: string
+  prompter?: string
 }

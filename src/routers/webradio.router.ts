@@ -48,6 +48,8 @@ export default class WebradioRouter implements Route {
      *   get:
      *     tags:
      *       - Webradio
+     *     security:
+     *       - bearer: []
      *     summary: Get current show
      *     responses:
      *       200:
@@ -57,7 +59,7 @@ export default class WebradioRouter implements Route {
       `${this.path}/shows/current`,
       async (req: Request, res: Response<DataHttpResponse<{ show: WebradioShow }>>, next: NextFunction) => {
         try {
-          const resp = await new Webradio().getCurrentWebradioShow()
+          const resp = await new Webradio().getCurrentWebradioShow(req.headers)
           if (resp.data) {
             res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
           } else {
@@ -150,6 +152,8 @@ export default class WebradioRouter implements Route {
      *                 type: string
      *               thumbnail:
      *                 type: file
+     *               prompter:
+     *                 type: string
      *     responses:
      *       200:
      *         description: Show posted
@@ -201,6 +205,8 @@ export default class WebradioRouter implements Route {
      *                 type: string
      *               thumbnail:
      *                 type: file
+     *               prompter:
+     *                 type: string
      *     responses:
      *       200:
      *         description: Show updated

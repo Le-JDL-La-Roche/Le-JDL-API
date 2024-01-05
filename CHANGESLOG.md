@@ -1,14 +1,22 @@
 # Mises à jour de l'API
 
+### 1<sup>er</sup> janvier 2024 `v2.1.2`
+- Fonctions administrateur
+
+### 15 septembre 2023 `v2.0.1`
+- Fonctions administrateur
+
 ### 1<sup>er</sup> septembre 2023 `v2.0.0`
-- Amélioration du système de direct Webradio
-- Création d'un agenda
-- Mise en place de Socket.io
 - Migration vers Node.js avec Express.js (PHP -> Node.js)
+- Amélioration du système de direct Webradio
+- Rediffusion d'émissions
+- Salle d'attente avant le début du direct
+- Agenda
+- Mise en place de Socket.io
 - Optimisation du code
-- *Open source*
 - Fonctions administrateur
 - Corrections de bugs
+- *Open source*
 
 ### 9 décembre 2022 `v1.7.0`
 - Mise en place du nouveau système de direct Webradio
