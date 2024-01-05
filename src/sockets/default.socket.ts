@@ -5,6 +5,8 @@ import { IO } from '$models/handle/io.model'
 import { WebradioShow } from '$models/features/webradio-show.model'
 import { count } from '$models/types'
 import { WebradioQuestion } from '$models/features/webradio-question.model'
+import nexter from '$utils/nexter'
+import { AuthService } from '$services/auth.service'
 
 export default class DefaultSocket implements IO {
   static viewers: number = 0
@@ -22,6 +24,8 @@ export default class DefaultSocket implements IO {
       }
 
       DefaultSocket.viewers = 0
+
+      delete liveShow.prompter
 
       if (liveShow && liveShow.id) {
         io.emit('waitStreamLaunched', liveShow)
@@ -41,6 +45,8 @@ export default class DefaultSocket implements IO {
 
       DefaultSocket.viewers = 0
 
+      delete liveShow.prompter
+
       if (liveShow && liveShow.id) {
         io.emit('liveStreamLaunched', liveShow)
       }
@@ -51,7 +57,9 @@ export default class DefaultSocket implements IO {
       let liveShowCount: count
 
       try {
-        liveShowCount = (await db.query<count[]>('SELECT COUNT(*) as count FROM webradio_shows WHERE status = -1 OR status = 0 ORDER BY date DESC'))[0]
+        liveShowCount = (
+          await db.query<count[]>('SELECT COUNT(*) as count FROM webradio_shows WHERE status = -1 OR status = 0 ORDER BY date DESC')
+        )[0]
       } catch (error) {
         socket.emit('error', error)
         return
@@ -77,6 +85,8 @@ export default class DefaultSocket implements IO {
 
       DefaultSocket.viewers = 0
 
+      delete liveShow.prompter
+
       if (liveShow && liveShow.id) {
         io.emit('waitRestreamLaunched', liveShow)
       }
@@ -95,6 +105,8 @@ export default class DefaultSocket implements IO {
 
       DefaultSocket.viewers = 0
 
+      delete liveShow.prompter
+
       if (liveShow && liveShow.id) {
         io.emit('liveRestreamLaunched', liveShow)
       }
@@ -105,7 +117,9 @@ export default class DefaultSocket implements IO {
       let liveShowCount: count
 
       try {
-        liveShowCount = (await db.query<count[]>('SELECT COUNT(*) as count FROM webradio_shows WHERE status = -1.5 OR status = 0.5 ORDER BY date DESC'))[0]
+        liveShowCount = (
+          await db.query<count[]>('SELECT COUNT(*) as count FROM webradio_shows WHERE status = -1.5 OR status = 0.5 ORDER BY date DESC')
+        )[0]
       } catch (error) {
         socket.emit('error', error)
         return
@@ -117,6 +131,65 @@ export default class DefaultSocket implements IO {
         io.emit('liveRestreamStopped')
       }
     })
+
+    //! Update show
+    socket.on('updateShow', async () => {
+      io.emit('showUpdated')
+    })
+
+    //! Reset prompter settings
+    socket.on('resetPrompterSettings', async () => {
+      io.emit('prompterSettingsReset')
+    })
+
+    //! Update prompter settings
+    socket.on('updatePrompterSettings', async (data) => {
+      try {
+        nexter.serviceToException(await new AuthService().checkAuth('Bearer ' + data.jwt, 'Bearer'))
+      } catch (error) {
+        return
+      }
+
+      io.emit('prompterSettingsUpdated', data.settings)
+    })
+
+    //! Update scene
+    socket.on('updateScene', async (data) => {
+      try {
+        nexter.serviceToException(await new AuthService().checkAuth('Bearer ' + data.jwt + '', 'Bearer'))
+      } catch (error) {
+        return
+      }
+
+      io.emit('sceneUpdated', data.data)
+    })
+
+    socket.on('askScene', () => {
+      io.emit('sceneAsked')
+    })
+
+    //! Message to manager
+    socket.on('sendMessageToManager', async (data) => {
+      try {
+        nexter.serviceToException(await new AuthService().checkAuth('Bearer ' + data.jwt + '', 'Bearer'))
+      } catch (error) {
+        return
+      }
+
+      io.emit('messageSentToManager', data.data)
+    })
+    
+    //! Message to presenter
+    socket.on('sendMessageToPresenter', async (data) => {
+      try {
+        nexter.serviceToException(await new AuthService().checkAuth('Bearer ' + data.jwt + '', 'Bearer'))
+      } catch (error) {
+        return
+      }
+
+      io.emit('messageSentToPresenter', data.data)
+    })
+
 
     //! Update Questions
     socket.on('question', async () => {
@@ -132,7 +205,7 @@ export default class DefaultSocket implements IO {
       let questions: WebradioQuestion[]
 
       try {
-        questions = (await db.query<WebradioQuestion[]>('SELECT * FROM webradio_shows_questions WHERE show_id = ? ORDER BY date ASC', liveShow.id))
+        questions = await db.query<WebradioQuestion[]>('SELECT * FROM webradio_shows_questions WHERE show_id = ? ORDER BY date ASC', liveShow.id)
       } catch (error) {
         socket.emit('error', error)
         return
@@ -145,10 +218,10 @@ export default class DefaultSocket implements IO {
     socket.on('addViewer', () => {
       io.emit('updateViewers', ++DefaultSocket.viewers)
     })
-    
+
     //! Remove Viewer
     socket.on('removeViewer', () => {
-      io.emit('updateViewers', (DefaultSocket.viewers <= 0 ? 0 : --DefaultSocket.viewers))
+      io.emit('updateViewers', DefaultSocket.viewers <= 0 ? 0 : --DefaultSocket.viewers)
     })
 
     //! Get Viewers

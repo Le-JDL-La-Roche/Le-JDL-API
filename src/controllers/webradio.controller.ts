@@ -28,7 +28,7 @@ export default class Webradio {
     return new DataSuccess(200, SUCCESS, 'Success', { shows: webradioShows })
   }
 
-  async getCurrentWebradioShow(): Promise<DataSuccess<{ show: WebradioShow } | null>> {
+  async getCurrentWebradioShow(headers: IncomingHttpHeaders): Promise<DataSuccess<{ show: WebradioShow } | null>> {
     let webradioShow: WebradioShow
 
     try {
@@ -42,7 +42,9 @@ export default class Webradio {
     }
 
     if (webradioShow && webradioShow.id) {
-      delete webradioShow.prompter
+      if (!(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer')).status) {
+        delete webradioShow.prompter
+      }
       return new DataSuccess(200, SUCCESS, 'Success', { show: webradioShow })
     } else {
       return new DataSuccess(200, SUCCESS, 'No show', null)
