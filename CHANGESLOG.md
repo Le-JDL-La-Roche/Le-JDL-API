@@ -1,5 +1,9 @@
 # Mises à jour de l'API
 
+### 12 avril 2024 `v2.3.0`
+- Information à la Une
+- Fonctions administrateur
+
 ### 1<sup>er</sup> janvier 2024 `v2.1.2`
 - Fonctions administrateur
 
