@@ -83,7 +83,7 @@ export default class Agenda {
     event = {
       title: body.title ? body.title + '' : event.title,
       content: body.content ? body.content + '' : event.content,
-      date: body.date ? body.date + '' : body.date,
+      date: body.date ? body.date + '' : event.date,
       color: body.color ? body.color + '' : event.color,
       thumbnail: file ? file.filename + '' : event.thumbnail
     }

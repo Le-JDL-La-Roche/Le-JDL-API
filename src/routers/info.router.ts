@@ -1,15 +1,15 @@
 import { Route } from '$models/handle/route.model'
 import { Router, NextFunction } from 'express'
 import { Request, Response } from 'express'
-import Agenda from '$controllers/agenda.controller'
+import Info from '$controllers/info.controller'
 import { DataHttpResponse } from '$models/responses/http/data-http-response.model'
-import { Event } from '$models/features/agenda.model'
+import { Info as Info_} from '$models/features/info.model'
 import { FilesService } from '$services/files.service'
 import { ControllerException } from '$models/types'
 
-export default class AgendaRouter implements Route {
+export default class InfoRouter implements Route {
   router = Router()
-  path = '/agenda'
+  path = '/info'
 
   constructor() {
     this.init()
@@ -18,18 +18,18 @@ export default class AgendaRouter implements Route {
   private init() {
     /**
      * @openapi
-     * /agenda:
+     * /info:
      *   get:
      *     tags:
-     *       - Agenda
-     *     summary: Get agenda
+     *       - Info
+     *     summary: Get info
      *     responses:
      *       200:
-     *         description: Agenda
+     *         description: Info
      */
-    this.router.get(`${this.path}`, async (req: Request, res: Response<DataHttpResponse<{ agenda: Event[] }>>, next: NextFunction) => {
+    this.router.get(`${this.path}`, async (req: Request, res: Response<DataHttpResponse<{ info: Info_[] }>>, next: NextFunction) => {
       try {
-        const resp = await new Agenda().getAgenda()
+        const resp = await new Info().getInfo(req.headers)
         res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
       } catch (error: unknown) {
         next(error as ControllerException)
@@ -38,13 +38,13 @@ export default class AgendaRouter implements Route {
 
     /**
      * @openapi
-     * /agenda:
+     * /info:
      *   post:
      *     tags:
-     *       - Agenda
+     *       - Info
      *     security:
      *       - bearer: []
-     *     summary: Post a new event
+     *     summary: Post a new info
      *     requestBody:
      *       required: false
      *       content:
@@ -52,26 +52,19 @@ export default class AgendaRouter implements Route {
      *           schema:
      *             type: object
      *             properties:
-     *               title:
+     *               html:
      *                 type: string
-     *               content:
+     *               css:
      *                 type: string
-     *               date:
-     *                 type: string
-     *               color:
-     *                 type: string
-     *               thumbnail:
-     *                 type: file
      *     responses:
      *       200:
-     *         description: Event posted
+     *         description: Info posted
      */
     this.router.post(
       `${this.path}`,
-      new FilesService().uploadAgendaThumbnail,
-      async (req: Request, res: Response<DataHttpResponse<{ agenda: Event[] }>>, next: NextFunction) => {
+      async (req: Request, res: Response<DataHttpResponse<{ info: Info_[] }>>, next: NextFunction) => {
         try {
-          const resp = await new Agenda().postEvent(req.headers, req.body, req.file || null)
+          const resp = await new Info().postInfo(req.headers, req.body, req.file || null)
           res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
         } catch (error: unknown) {
           next(error as ControllerException)
@@ -81,16 +74,38 @@ export default class AgendaRouter implements Route {
 
     /**
      * @openapi
-     * /agenda/{event_id}:
+     * /info/reset:
      *   put:
      *     tags:
-     *       - Agenda
+     *       - Info
      *     security:
      *       - bearer: []
-     *     summary: Put an agenda event by ID
+     *     summary: Reset enabled info
+     *     responses:
+     *       200:
+     *         description: Info reset
+     */
+    this.router.put(`${this.path}/reset`, async (req: Request, res: Response<DataHttpResponse<{ info: Info_[] }>>, next: NextFunction) => {
+      try {
+        const resp = await new Info().putResetInfo(req.headers)
+        res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
+      } catch (error: unknown) {
+        next(error as ControllerException)
+      }
+    })
+    
+    /**
+     * @openapi
+     * /info/{info_id}:
+     *   put:
+     *     tags:
+     *       - Info
+     *     security:
+     *       - bearer: []
+     *     summary: Put an info info by ID
      *     parameters:
      *       - in: path
-     *         name: event_id
+     *         name: info_id
      *         required: true
      *     requestBody:
      *       required: false
@@ -99,26 +114,21 @@ export default class AgendaRouter implements Route {
      *           schema:
      *             type: object
      *             properties:
-     *               title:
+     *               html:
      *                 type: string
-     *               content:
+     *               css:
      *                 type: string
-     *               date:
+     *               enabled:
      *                 type: string
-     *               color:
-     *                 type: string
-     *               thumbnail:
-     *                 type: file
      *     responses:
      *       200:
-     *         description: Event updated
+     *         description: Info updated
      */
     this.router.put(
       `${this.path}/:id`,
-      new FilesService().uploadAgendaThumbnail,
-      async (req: Request, res: Response<DataHttpResponse<{ agenda: Event[] }>>, next: NextFunction) => {
+      async (req: Request, res: Response<DataHttpResponse<{ info: Info_[] }>>, next: NextFunction) => {
         try {
-          const resp = await new Agenda().putEvent(req.headers, +req.params.id, req.body, req.file || null)
+          const resp = await new Info().putInfo(req.headers, +req.params.id, req.body, req.file || null)
           res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
         } catch (error: unknown) {
           next(error as ControllerException)
@@ -128,24 +138,24 @@ export default class AgendaRouter implements Route {
 
     /**
      * @openapi
-     * /agenda/{event_id}:
+     * /info/{info_id}:
      *   delete:
      *     tags:
-     *       - Agenda
+     *       - Info
      *     security:
      *       - bearer: []
-     *     summary: Delete an agenda event by ID
+     *     summary: Delete an info info by ID
      *     parameters:
      *       - in: path
-     *         name: event_id
+     *         name: info_id
      *         required: true
      *     responses:
      *       200:
-     *         description: Event deleted
+     *         description: Info deleted
      */
-    this.router.delete(`${this.path}/:id`, async (req: Request, res: Response<DataHttpResponse<{ agenda: Event[] }>>, next: NextFunction) => {
+    this.router.delete(`${this.path}/:id`, async (req: Request, res: Response<DataHttpResponse<{ info: Info_[] }>>, next: NextFunction) => {
       try {
-        const resp = await new Agenda().deleteEvent(req.headers, +req.params.id)
+        const resp = await new Info().deleteInfo(req.headers, +req.params.id)
         res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
       } catch (error: unknown) {
         next(error as ControllerException)

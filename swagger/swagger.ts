@@ -36,6 +36,7 @@ const options: swaggerJSDoc.OAS3Options = {
       { name: 'Videos' },
       { name: 'Articles' },
       { name: 'Agenda' },
+      { name: 'Info' },
       { name: 'Authorizations' }
     ]
   },

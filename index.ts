@@ -8,6 +8,7 @@ import VideosRouter from '$routers/video.router'
 import ArticlesRouter from '$routers/articles.router'
 import AuthorizationsRouter from '$routers/authorizations.router'
 import AgendaRouter from '$routers/agenda.router'
+import InfoRouter from '$routers/info.router'
 
 new App(
   [
@@ -18,6 +19,7 @@ new App(
     new VideosRouter(),
     new ArticlesRouter(),
     new AgendaRouter(),
+    new InfoRouter(),
     new AuthorizationsRouter()
   ],
   [new DefaultSocket()]
