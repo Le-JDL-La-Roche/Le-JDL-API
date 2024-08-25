@@ -5,24 +5,29 @@ import { DBException } from '$responses/exceptions/db-exception.response'
 import { DataSuccess } from '$responses/success/data-success.response'
 import { IncomingHttpHeaders } from 'http'
 import nexter from '$utils/nexter'
-import { Authorization } from '$models/data/authorization.model'
+import { ArticleAuthorization, Authorization, VideoAuthorization, WebradioAuthorization } from '$models/data/authorization.model'
 import { RequestException } from '$responses/exceptions/request-exception.response'
 import { WebradioShow } from '$models/features/webradio-show.model'
 import { Video } from '$models/features/video.model'
 import { Article } from '$models/features/article.model'
+import crypto from 'crypto'
 
 export default class Authorizations {
   async getAuthorizations(headers: IncomingHttpHeaders): Promise<DataSuccess<{ authorizations: Authorization[] }>> {
     try {
       nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
     } catch (error: unknown) {
-      throw error as ControllerException
+      try {
+        nexter.serviceToException(await new AuthService().checkManAuth(headers['authorization'] + ''))
+      } catch (error) {
+        throw error as ControllerException
+      }
     }
 
     let authorizations: Authorization[] = []
 
     try {
-      authorizations = await db.query<Authorization[]>('SELECT * FROM authorizations')
+      authorizations = await db.query<Authorization[]>('SELECT * FROM authorizations ORDER BY submit_date DESC')
     } catch (error) {
       throw new DBException(undefined, error)
     }
@@ -34,7 +39,11 @@ export default class Authorizations {
     try {
       nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
     } catch (error: unknown) {
-      throw error as ControllerException
+      try {
+        nexter.serviceToException(await new AuthService().checkManAuth(headers['authorization'] + ''))
+      } catch (error) {
+        throw error as ControllerException
+      }
     }
 
     let authorization: Authorization
@@ -68,6 +77,8 @@ export default class Authorizations {
       throw new RequestException('Invalid parameters')
     }
 
+    body.status = body.status && +body.status == -1 ? -1 : -2
+
     let elementId: number
 
     try {
@@ -80,7 +91,7 @@ export default class Authorizations {
 
     try {
       authorization = (
-        await db.query<count[]>('SELECT COUNT(*) AS count FROM authorizations WHERE element_type = ? AND element_id = ?', [
+        await db.query<count[]>('SELECT COUNT(*) AS count FROM authorizations WHERE element_type = ? AND element_id = ? AND status < 0', [
           body.elementType,
           elementId
         ])
@@ -94,19 +105,26 @@ export default class Authorizations {
     }
 
     try {
-      await db.query('INSERT INTO authorizations (element_type, element_id, content) VALUES (?, ?, ?)', [
+      await db.query('INSERT INTO authorizations (element_type, element_id, content, submit_date, status) VALUES (?, ?, ?, ?, ?)', [
         body.elementType,
         +body.elementId,
-        body.content as string
+        body.content as string,
+        Math.floor(Date.now() / 1000),
+        body.status
       ])
     } catch (error) {
       throw new DBException(undefined, error)
     }
 
+    if (body.status === -1) {
+      console.debug('Send Instagram message to managers')
+      // Send Instagram message to managers
+    }
+
     let authorizations: Authorization[] = []
 
     try {
-      authorizations = await db.query<Authorization[]>('SELECT * FROM authorizations')
+      authorizations = await db.query<Authorization[]>('SELECT * FROM authorizations ORDER BY submit_date DESC')
     } catch (error) {
       throw new DBException(undefined, error)
     }
@@ -119,11 +137,93 @@ export default class Authorizations {
     authorizationId: number,
     body: Authorization
   ): Promise<DataSuccess<{ authorizations: Authorization[] }>> {
+    const jdlAuth = await new AuthService().checkAuth(headers['authorization'] + '')
+    const manAuth = await new AuthService().checkManAuth(headers['authorization'] + '')
+
+    if (jdlAuth.status) return await this.putJdlAuthorization(headers, authorizationId, body)
+    if (manAuth.status) return await this.putManAuthorization(headers, authorizationId, body, manAuth.data + '')
+
+    throw new RequestException('Unauthorized')
+  }
+
+  private async putJdlAuthorization(
+    headers: IncomingHttpHeaders,
+    authorizationId: number,
+    body: Authorization
+  ): Promise<DataSuccess<{ authorizations: Authorization[] }>> {
+    let authorization: Authorization
+
     try {
-      nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
-    } catch (error: unknown) {
-      throw error as ControllerException
+      authorization = (await db.query<Authorization[]>('SELECT* FROM authorizations WHERE id = ?', +authorizationId))[0]
+    } catch (error) {
+      throw new DBException(undefined, error)
     }
+
+    if (!authorization || !authorization.id) {
+      throw new RequestException('Authorization not found')
+    }
+
+    if (authorization.status !== -2) {
+      if (authorization.status === 1) {
+        return this.postAuthorization(headers, body)
+      }
+      throw new RequestException('Authorization already submitted')
+    }
+
+    if (body.elementType && body.elementType !== 'show' && body.elementType !== 'video' && body.elementType !== 'article') {
+      throw new RequestException('Invalid parameters')
+    }
+
+    try {
+      await this.checkElement(body)
+    } catch (error) {
+      throw error
+    }
+
+    authorization = {
+      elementType: body.elementType ? body.elementType : authorization.elementType,
+      elementId: body.elementId ? body.elementId : authorization.elementId,
+      content: body.content ? body.content : authorization.content,
+      status: body.status && +body.status === -1 ? -1 : -2
+    }
+
+    try {
+      await db.query('UPDATE authorizations SET element_type = ?, element_id = ?, content = ?, submit_date = ?, status = ? WHERE id = ?', [
+        authorization.elementType,
+        authorization.elementId,
+        authorization.content,
+        Math.floor(Date.now() / 1000),
+        authorization.status,
+        authorizationId
+      ])
+    } catch (error) {
+      throw new DBException(undefined, error)
+    }
+
+    if (authorization.status === -1) {
+      console.debug('Send Instagram message to managers')
+      // Send Instagram message to managers
+    }
+
+    let authorizations: Authorization[] = []
+
+    try {
+      authorizations = await db.query<Authorization[]>('SELECT * FROM authorizations')
+    } catch (error) {
+      throw new DBException(undefined, error)
+    }
+
+    return new DataSuccess(200, SUCCESS, 'Success', { authorizations })
+  }
+
+  private async putManAuthorization(
+    headers: IncomingHttpHeaders,
+    authorizationId: number,
+    body: Authorization,
+    manId: string
+  ): Promise<DataSuccess<{ authorizations: Authorization[] }>> {
+    const sigPrivateKey: string = (process.env['SIG_PRIVATE_KEYS'] + '').replaceAll('\\n', '\n')
+    const currentDate = new Date().toLocaleDateString('fr-FR')
 
     let authorization: Authorization
 
@@ -137,33 +237,50 @@ export default class Authorizations {
       throw new RequestException('Authorization not found')
     }
 
-    if (
-      body.elementType &&
-      body.elementType !== 'show' &&
-      body.elementType !== 'video' &&
-      body.elementType !== 'article' &&
-      body.elementType !== 'guest'
-    ) {
+    if (authorization.status !== -1) {
+      throw new RequestException('Response already submitted')
+    }
+
+    const id = JSON.parse(process.env['MAN_IDS'] + '').indexOf(manId)
+    const name = JSON.parse(process.env['MAN_NAMES'] + '')[id]
+
+    if (!body.status || (+body.status !== 1 && +body.status !== 2)) {
+      throw new RequestException('Invalid parameters')
+    }
+
+    let signature: string
+
+    if (body.status === 2) {
+      signature = crypto
+        .privateEncrypt(
+          { key: sigPrivateKey, padding: crypto.constants.RSA_PKCS1_PADDING },
+          Buffer.from(`Autorisation de publication accordée par ${name} le ${currentDate}.`)
+        )
+        .toString('base64')
+
+      console.debug('Send Instagram message to JDL')
+      // Send Instagram message to JDL
+    } else if (body.status === 1) {
+      signature = crypto
+        .privateEncrypt(
+          { key: sigPrivateKey, padding: crypto.constants.RSA_PKCS1_PADDING },
+          Buffer.from(`Autorisation de publication refusée par ${name} le ${currentDate}.`)
+        )
+        .toString('base64')
+
+      console.debug('Send Instagram message to JDL')
+      // Send Instagram message to JDL
+    } else {
       throw new RequestException('Invalid parameters')
     }
 
     try {
-      await this.checkElement(body)
-    } catch (error) {
-      throw error
-    }
-
-    authorization = {
-      elementType: body.elementType ? body.elementType : authorization.elementType,
-      elementId: body.elementId ? body.elementId : authorization.elementId,
-      content: body.content ? body.content : authorization.content
-    }
-
-    try {
-      await db.query('UPDATE authorizations SET element_type = ?, element_id = ?, content = ? WHERE id = ?', [
-        authorization.elementType,
-        authorization.elementId,
-        authorization.content,
+      await db.query('UPDATE authorizations SET status = ?, manager = ?, comments = ?, response_date = ?, signature = ? WHERE id = ?', [
+        body.status,
+        name,
+        body.comments ? body.comments : '',
+        Math.floor(Date.now() / 1000),
+        signature,
         authorizationId
       ])
     } catch (error) {
@@ -235,7 +352,6 @@ export default class Authorizations {
         }
       }
 
-
       if (!show || !show.id) {
         throw new RequestException('Show not found')
       }
@@ -290,3 +406,4 @@ export default class Authorizations {
     return 0
   }
 }
+

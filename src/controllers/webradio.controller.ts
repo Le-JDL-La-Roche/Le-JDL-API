@@ -9,7 +9,7 @@ import nexter from '$utils/nexter'
 import { AuthService } from '$services/auth.service'
 import { RequestException } from '$responses/exceptions/request-exception.response'
 import { WebradioQuestion } from '$models/features/webradio-question.model'
-import { ResultSetHeader } from 'mysql2/promise'
+import { ResultSetHeader, RowDataPacket } from 'mysql2/promise'
 
 export default class Webradio {
   async getPublishedWebradioShows(): Promise<DataSuccess<{ shows: WebradioShow[] }>> {
@@ -55,7 +55,12 @@ export default class Webradio {
     try {
       nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
     } catch (error: unknown) {
-      throw error as ControllerException
+      try {
+        console.log(headers.authorization)
+        nexter.serviceToException(await new AuthService().checkManAuth(headers['authorization'] + ''))
+      } catch (error) {
+        throw error as ControllerException
+      }
     }
 
     let webradioShows: WebradioShow[] = []
@@ -86,7 +91,11 @@ export default class Webradio {
       try {
         nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
       } catch (error: unknown) {
-        throw error as ControllerException
+        try {
+          nexter.serviceToException(await new AuthService().checkManAuth(headers['authorization'] + ''))
+        } catch (error) {
+          throw error as ControllerException
+        }
       }
     }
 
@@ -101,15 +110,23 @@ export default class Webradio {
     headers: IncomingHttpHeaders,
     body: WebradioShow & { prompter?: string },
     file: Express.Multer.File | null
-  ): Promise<DataSuccess<{ shows: WebradioShow[] }>> {
+  ): Promise<DataSuccess<{ shows: WebradioShow[]; id: number }>> {
     try {
       nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
     } catch (error: unknown) {
       throw error as ControllerException
     }
 
-    if (!body.title || !body.description || !file || !body.streamId || !body.date || !body.status || !body.prompter) {
+    if (!body.title || !body.description || !file || !body.streamId || !body.status || !body.prompter) {
       throw new RequestException('Missing parameters')
+    }
+
+    if (!body.date) {
+      body.date = Math.round(Date.now() / 1000) + ''
+    }
+
+    if (!body.status) {
+      body.status = -2
     }
 
     if (
@@ -125,32 +142,35 @@ export default class Webradio {
       throw new RequestException('Invalid parameters')
     }
 
-    let liveShow: WebradioShow
+    // let liveShow: WebradioShow
+    //
+    // try {
+    //   liveShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = -1 OR status = 0 OR status = -1.5 OR status = 0.5'))[0]
+    // } catch (error) {
+    //   throw new DBException(undefined, error)
+    // }
+    //
+    // if (liveShow && liveShow.id && (+body.status != -1 || +body.status == 0 || +body.status == -1.5 || +body.status == 0.5)) {
+    //   throw new RequestException('A show is already live')
+    // }
 
+    let showId: number
     try {
-      liveShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = -1 OR status = 0 OR status = -1.5 OR status = 0.5'))[0]
-    } catch (error) {
-      throw new DBException(undefined, error)
-    }
-
-    if (liveShow && liveShow.id && (+body.status != -1 || +body.status == 0 || +body.status == -1.5 || +body.status == 0.5)) {
-      throw new RequestException('A show is already live')
-    }
-
-    try {
-      await db.query(
-        'INSERT INTO webradio_shows (title, description, thumbnail, stream_id, podcast_id, date, status, prompter) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [
-          body.title + '',
-          body.description + '',
-          file.filename + '',
-          body.streamId + '',
-          body.podcastId + '',
-          body.date + '',
-          +body.status,
-          body.prompter + ''
-        ]
-      )
+      showId = (
+        await db.query<RowDataPacket>(
+          'INSERT INTO webradio_shows (title, description, thumbnail, stream_id, podcast_id, date, status, prompter) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+          [
+            body.title + '',
+            body.description + '',
+            file.filename + '',
+            body.streamId + '',
+            body.podcastId + '',
+            body.date + '',
+            +body.status,
+            body.prompter + ''
+          ]
+        )
+      ).insertId
     } catch (error) {
       throw new DBException(undefined, error)
     }
@@ -163,7 +183,7 @@ export default class Webradio {
       throw new DBException(undefined, error)
     }
 
-    return new DataSuccess(200, SUCCESS, 'Success', { shows: webradioShows })
+    return new DataSuccess(200, SUCCESS, 'Success', { shows: webradioShows, id: +showId })
   }
 
   async putWebradioShow(
@@ -171,7 +191,7 @@ export default class Webradio {
     showId: number,
     body: WebradioShow,
     file: Express.Multer.File | null
-  ): Promise<DataSuccess<{ shows: WebradioShow[] }>> {
+  ): Promise<DataSuccess<{ shows: WebradioShow[]; id: number }>> {
     try {
       nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
     } catch (error: unknown) {
@@ -205,22 +225,22 @@ export default class Webradio {
       throw new RequestException('Invalid parameters')
     }
 
-    let liveShow: WebradioShow
-
-    try {
-      liveShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = -1 OR status = 0 OR status = -1.5 OR status = 0.5'))[0]
-    } catch (error) {
-      throw new DBException(undefined, error)
-    }
-
-    if (
-      liveShow &&
-      liveShow.id &&
-      liveShow.id != webradioShow.id &&
-      (+body.status == -1 || +body.status == 0 || +body.status == -1.5 || +body.status == 0.5)
-    ) {
-      throw new RequestException('A show is already live')
-    }
+    // let liveShow: WebradioShow
+    //
+    // try {
+    //   liveShow = (await db.query<WebradioShow[]>('SELECT * FROM webradio_shows WHERE status = -1 OR status = 0 OR status = -1.5 OR status = 0.5'))[0]
+    // } catch (error) {
+    //   throw new DBException(undefined, error)
+    // }
+    //
+    // if (
+    //   liveShow &&
+    //   liveShow.id &&
+    //   liveShow.id != webradioShow.id &&
+    //   (+body.status == -1 || +body.status == 0 || +body.status == -1.5 || +body.status == 0.5)
+    // ) {
+    //   throw new RequestException('A show is already live')
+    // }
 
     webradioShow = {
       title: body.title ? body.title + '' : webradioShow.title,
@@ -260,7 +280,7 @@ export default class Webradio {
       throw new DBException(undefined, error)
     }
 
-    return new DataSuccess(200, SUCCESS, 'Success', { shows: webradioShows })
+    return new DataSuccess(200, SUCCESS, 'Success', { shows: webradioShows, id: +showId })
   }
 
   async deleteWebradioShow(headers: IncomingHttpHeaders, showId: number): Promise<DataSuccess<{ shows: WebradioShow[] }>> {
@@ -284,6 +304,12 @@ export default class Webradio {
 
     try {
       await db.query('DELETE FROM webradio_shows WHERE id = ?', +showId)
+    } catch (error) {
+      throw new DBException(undefined, error)
+    }
+
+    try {
+      await db.query("DELETE FROM authorizations WHERE element_type = 'show' AND element_id = ?", +showId)
     } catch (error) {
       throw new DBException(undefined, error)
     }
@@ -387,3 +413,5 @@ export default class Webradio {
     return new DataSuccess(200, SUCCESS, 'Success', { questions: webradioShowQuestions })
   }
 }
+
+

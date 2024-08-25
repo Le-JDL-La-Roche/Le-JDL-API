@@ -52,7 +52,7 @@
         "./src/utils/*"
       ]
     },
-    "target": "es2016",
+    "target": "es2021",
     "module": "commonjs",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,

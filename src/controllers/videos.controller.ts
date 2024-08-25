@@ -8,6 +8,7 @@ import { RequestException } from '$responses/exceptions/request-exception.respon
 import { IncomingHttpHeaders } from 'http'
 import nexter from '$utils/nexter'
 import { AuthService } from '$services/auth.service'
+import { RowDataPacket } from 'mysql2'
 
 export default class Videos {
   private readonly cat = ['news', 'culture', 'sport', 'science', 'tech', 'laroche']
@@ -28,7 +29,11 @@ export default class Videos {
     try {
       nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
     } catch (error: unknown) {
-      throw error as ControllerException
+      try {
+        nexter.serviceToException(await new AuthService().checkManAuth(headers['authorization'] + ''))
+      } catch (error) {
+        throw error as ControllerException
+      }
     }
 
     let videos: Video[] = []
@@ -59,14 +64,22 @@ export default class Videos {
       try {
         nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
       } catch (error: unknown) {
-        throw error as ControllerException
+        try {
+          nexter.serviceToException(await new AuthService().checkManAuth(headers['authorization'] + ''))
+        } catch (error) {
+          throw error as ControllerException
+        }
       }
     }
 
     return new DataSuccess(200, SUCCESS, 'Success', { video })
   }
 
-  async postVideo(headers: IncomingHttpHeaders, body: Video, file: Express.Multer.File | null): Promise<DataSuccess<{ videos: Video[] }>> {
+  async postVideo(
+    headers: IncomingHttpHeaders,
+    body: Video,
+    file: Express.Multer.File | null
+  ): Promise<DataSuccess<{ videos: Video[]; id: number }>> {
     try {
       nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
     } catch (error: unknown) {
@@ -77,29 +90,40 @@ export default class Videos {
       throw new RequestException('Missing parameters')
     }
 
+    if (!body.date) {
+      body.date = Math.round(Date.now() / 1000) + ''
+    }
+
+    if (!body.status) {
+      body.status = -2
+    }
+
     if ((body.type != 'youtube' && body.type != 'instagram') || !this.cat.includes(body.category)) {
       throw new RequestException('Invalid parameters')
     }
 
-    if (+body.status != -2 && +body.status != 2) {
+    if (+body.status != -2 && +body.status != -1 && +body.status != 2) {
       throw new RequestException('Invalid parameters')
     }
 
+    let videoId: number
     try {
-      await db.query(
-        'INSERT INTO videos (title, description, thumbnail, video_id, type, category, author, date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [
-          body.title + '',
-          body.description + '',
-          file.filename + '',
-          body.videoId + '',
-          body.type + '',
-          body.category + '',
-          body.author + '',
-          Math.round(Date.now() / 1000),
-          +body.status
-        ]
-      )
+      videoId = (
+        await db.query<RowDataPacket>(
+          'INSERT INTO videos (title, description, thumbnail, video_id, type, category, author, date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          [
+            body.title + '',
+            body.description + '',
+            file.filename + '',
+            body.videoId + '',
+            body.type + '',
+            body.category + '',
+            body.author + '',
+            body.date + '',
+            +body.status
+          ]
+        )
+      ).insertId
     } catch (error) {
       throw new DBException(undefined, error)
     }
@@ -112,7 +136,7 @@ export default class Videos {
       throw new DBException(undefined, error)
     }
 
-    return new DataSuccess(200, SUCCESS, 'Success', { videos })
+    return new DataSuccess(200, SUCCESS, 'Success', { videos, id: +videoId })
   }
 
   async putVideo(
@@ -120,7 +144,7 @@ export default class Videos {
     videoId: number,
     body: Video,
     file: Express.Multer.File | null
-  ): Promise<DataSuccess<{ videos: Video[] }>> {
+  ): Promise<DataSuccess<{ videos: Video[]; id: number }>> {
     try {
       nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
     } catch (error: unknown) {
@@ -146,7 +170,7 @@ export default class Videos {
       throw new RequestException('Invalid parameters')
     }
 
-    if (body.status != null && body.status != undefined && +body.status != -2 && +body.status != 2) {
+    if (body.status != null && body.status != undefined && +body.status != -2 && +body.status != -1 && +body.status != 2) {
       throw new RequestException('Invalid parameters')
     }
 
@@ -158,7 +182,7 @@ export default class Videos {
       type: body.type ? body.type : video.type,
       category: body.category ? body.category : video.category,
       author: body.author ? body.author + '' : video.author,
-      date: video.status === -2 && body.status === 2 ? Math.round(Date.now() / 1000) + '' : video.date,
+      date: body.date ? body.date + '' : video.date,
       status: body.status ? body.status : video.status
     }
 
@@ -179,7 +203,7 @@ export default class Videos {
       throw new DBException(undefined, error)
     }
 
-    return new DataSuccess(200, SUCCESS, 'Success', { videos })
+    return new DataSuccess(200, SUCCESS, 'Success', { videos, id: +videoId })
   }
 
   async deleteVideo(headers: IncomingHttpHeaders, videoId: number): Promise<DataSuccess<{ videos: Video[] }>> {
@@ -207,6 +231,12 @@ export default class Videos {
       throw new DBException(undefined, error)
     }
 
+    try {
+      await db.query("DELETE FROM authorizations WHERE element_type = 'video' AND element_id = ?", +videoId)
+    } catch (error) {
+      throw new DBException(undefined, error)
+    }
+
     let videos: Video[] = []
 
     try {
@@ -218,3 +248,4 @@ export default class Videos {
     return new DataSuccess(200, SUCCESS, 'Success', { videos })
   }
 }
+

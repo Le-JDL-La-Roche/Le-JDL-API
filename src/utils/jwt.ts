@@ -3,7 +3,7 @@ import jwt, { JwtPayload } from 'jsonwebtoken'
 import { count } from '$models/types'
 
 class JWT {
-  async verify(token: string): Promise<[true, JwtPayload | string] | [false, number, string]> {
+  async verify(token: string, skipDbCheck = false): Promise<[true, JwtPayload | string] | [false, number, string]> {
     const secretKey = process.env['JWT_SECRET_KEY']
     let decoded: JwtPayload | string
     let isJwt: count
@@ -18,6 +18,8 @@ class JWT {
       }
     }
 
+    if (skipDbCheck) return [true, decoded]
+
     try {
       isJwt = (await db.query<count[]>('SELECT COUNT(*) AS count FROM exp_jwt WHERE jwt = ?', [token]))[0]
     } catch (error: any) {
@@ -31,15 +33,15 @@ class JWT {
     return [true, decoded]
   }
 
-  generate(): string {
+  generate(username = process.env['ADMIN_USERNAME']!, expDays = 30): string {
     const secretKey = process.env['JWT_SECRET_KEY'] + ''
 
     return jwt.sign(
       {
-        name: process.env['ADMIN_USERNAME'],
+        name: username,
       },
       secretKey,
-      { subject: 0 + '', expiresIn: '30 days' }
+      { subject: 0 + '', expiresIn: `${expDays} days` }
     )
   }
 

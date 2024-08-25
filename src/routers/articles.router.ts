@@ -110,6 +110,8 @@ export default class ArticlesRouter implements Route {
      *                 type: string
      *               author:
      *                 type: string
+     *               date:
+     *                 type: string
      *               status:
      *                 type: number
      *               thumbnail:
@@ -121,7 +123,7 @@ export default class ArticlesRouter implements Route {
     this.router.post(
       `${this.path}`,
       new FilesService().uploadArticleThumbnail,
-      async (req: Request, res: Response<DataHttpResponse<{ articles: Article[] }>>, next: NextFunction) => {
+      async (req: Request, res: Response<DataHttpResponse<{ articles: Article[]; id: number }>>, next: NextFunction) => {
         try {
           const resp = await new Articles().postArticle(req.headers, req.body, req.file || null)
           res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
@@ -161,6 +163,8 @@ export default class ArticlesRouter implements Route {
      *                 type: string
      *               author:
      *                 type: string
+     *               date:
+     *                 type: string
      *               status:
      *                 type: number
      *               thumbnail:
@@ -172,7 +176,7 @@ export default class ArticlesRouter implements Route {
     this.router.put(
       `${this.path}/:id`,
       new FilesService().uploadArticleThumbnail,
-      async (req: Request, res: Response<DataHttpResponse<{ articles: Article[] }>>, next: NextFunction) => {
+      async (req: Request, res: Response<DataHttpResponse<{ articles: Article[]; id: number }>>, next: NextFunction) => {
         try {
           const resp = await new Articles().putArticle(req.headers, +req.params.id, req.body, req.file || null)
           res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
@@ -209,3 +213,4 @@ export default class ArticlesRouter implements Route {
     })
   }
 }
+

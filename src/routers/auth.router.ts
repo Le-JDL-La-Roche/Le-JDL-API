@@ -40,6 +40,31 @@ export default class AuthRouter implements Route {
 
     /**
      * @openapi
+     * /auth-manager:
+     *   get:
+     *     tags:
+     *       - Auth
+     *     security:
+     *       - basic: []
+     *       - bearer: []
+     *     summary: Auth and verify the manager
+     *     responses:
+     *       200:
+     *         description: Logged
+     *       401:
+     *         description: Unauthorized
+     */
+    this.router.get('/auth-manager', async (req: Request, res: Response<DataHttpResponse<{ jwt: string }>>, next: NextFunction) => {
+      try {
+        const resp = await new Auth().authMan(req.headers)
+        res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
+      } catch (error) {
+        next(error as ControllerException)
+      }
+    })
+
+    /**
+     * @openapi
      * /verify:
      *   get:
      *     tags:
@@ -70,7 +95,7 @@ export default class AuthRouter implements Route {
      *      - Auth
      *     security:
      *       - bearer: []
-     *     summary: Logout the user
+     *     summary: Logout the admin
      *     responses:
      *       200:
      *         description: Logged out
@@ -85,3 +110,5 @@ export default class AuthRouter implements Route {
     })
   }
 }
+
+

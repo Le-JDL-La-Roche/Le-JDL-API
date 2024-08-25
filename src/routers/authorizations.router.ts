@@ -150,33 +150,33 @@ export default class AuthorizationsRouter implements Route {
       }
     )
 
-    /**
-     * @openapi
-     * /authorizations/{authorization_id}:
-     *   delete:
-     *     tags:
-     *       - Authorizations
-     *     security:
-     *       - bearer: []
-     *     summary: Delete an authorization
-     *     parameters:
-     *       - in: path
-     *         name: authorization_id
-     *         required: true
-     *     responses:
-     *       200:
-     *         description: Authorization deleted
-     */
-    this.router.delete(
-      `${this.path}/:id`,
-      async (req: Request, res: Response<DataHttpResponse<{ authorizations: Authorization[] }>>, next: NextFunction) => {
-        try {
-          const resp = await new Authorizations().deleteAuthorization(req.headers, +req.params.id)
-          res.status(resp.httpStatus).send({ code: resp.code, message: resp.message })
-        } catch (error: unknown) {
-          next(error as ControllerException)
-        }
-      }
-    )
+    // /**
+    //  * @openapi
+    //  * /authorizations/{authorization_id}:
+    //  *   delete:
+    //  *     tags:
+    //  *       - Authorizations
+    //  *     security:
+    //  *       - bearer: []
+    //  *     summary: Delete an authorization
+    //  *     parameters:
+    //  *       - in: path
+    //  *         name: authorization_id
+    //  *         required: true
+    //  *     responses:
+    //  *       200:
+    //  *         description: Authorization deleted
+    //  */
+    // this.router.delete(
+    //   `${this.path}/:id`,
+    //   async (req: Request, res: Response<DataHttpResponse<{ authorizations: Authorization[] }>>, next: NextFunction) => {
+    //     try {
+    //       const resp = await new Authorizations().deleteAuthorization(req.headers, +req.params.id)
+    //       res.status(resp.httpStatus).send({ code: resp.code, message: resp.message })
+    //     } catch (error: unknown) {
+    //       next(error as ControllerException)
+    //     }
+    //   }
+    // )
   }
 }

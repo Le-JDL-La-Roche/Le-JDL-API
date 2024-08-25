@@ -112,6 +112,8 @@ export default class VideosRouter implements Route {
      *                 type: string
      *               author:
      *                 type: string
+     *               date:
+     *                 type: string
      *               status:
      *                 type: number
      *               thumbnail:
@@ -123,7 +125,7 @@ export default class VideosRouter implements Route {
     this.router.post(
       `${this.path}`,
       new FilesService().uploadVideoThumbnail,
-      async (req: Request, res: Response<DataHttpResponse<{ videos: Video[] }>>, next: NextFunction) => {
+      async (req: Request, res: Response<DataHttpResponse<{ videos: Video[]; id: number }>>, next: NextFunction) => {
         try {
           const resp = await new Videos().postVideo(req.headers, req.body, req.file || null)
           res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
@@ -165,6 +167,8 @@ export default class VideosRouter implements Route {
      *                 type: string
      *               author:
      *                 type: string
+     *               date:
+     *                 type: string
      *               status:
      *                 type: number
      *               thumbnail:
@@ -176,7 +180,7 @@ export default class VideosRouter implements Route {
     this.router.put(
       `${this.path}/:id`,
       new FilesService().uploadVideoThumbnail,
-      async (req: Request, res: Response<DataHttpResponse<{ videos: Video[] }>>, next: NextFunction) => {
+      async (req: Request, res: Response<DataHttpResponse<{ videos: Video[]; id: number }>>, next: NextFunction) => {
         try {
           const resp = await new Videos().putVideo(req.headers, +req.params.id, req.body, req.file || null)
           res.status(resp.httpStatus).send({ code: resp.code, message: resp.message, data: resp.data })
@@ -213,3 +217,4 @@ export default class VideosRouter implements Route {
     })
   }
 }
+
