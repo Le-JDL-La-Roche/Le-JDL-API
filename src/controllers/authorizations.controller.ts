@@ -293,7 +293,14 @@ export default class Authorizations {
     }
 
     if (+body.status > 0) {
-      new IgService().sendMessagesToJdl(element, {...authorization, status: body.status, id: authorizationId})
+      new IgService().sendMessagesToJdl(element, {
+        ...authorization,
+        status: +body.status as 1 | 2,
+        manager: name,
+        comments: body.comments ? body.comments : 'Non spécifié',
+        responseDate: Math.floor(Date.now() / 1000) + '',
+        id: authorizationId
+      })
     }
 
     let authorizations: Authorization[] = []
@@ -415,4 +422,5 @@ export default class Authorizations {
     throw new RequestException('Invalid parameters')
   }
 }
+
 

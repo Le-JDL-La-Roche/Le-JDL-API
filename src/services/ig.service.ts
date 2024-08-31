@@ -14,26 +14,35 @@ dotenv.config()
 export class IgService {
   async sendMessagesToJdl(element: WebradioShow | Video | Article, authorization: Authorization) {
     if (typeof authorization.content === 'string') authorization.content = JSON.parse(authorization.content)
-      authorization.content = authorization.content as WebradioAuthorization | VideoAuthorization | ArticleAuthorization
-      const igToken = process.env['IG_TOKEN'] + ''
+    authorization.content = authorization.content as WebradioAuthorization | VideoAuthorization | ArticleAuthorization
+    const igToken = process.env['IG_TOKEN'] + ''
 
-      const jdlIgsids = JSON.parse(process.env['JDL_IGSIDS'] + '') as string[]
+    const jdlIgsids = JSON.parse(process.env['JDL_IGSIDS'] + '') as string[]
 
-    // for (const igsid of jdlIgsids) {
-    //   const payload = {
-    //     recipient: {
-    //       id: igsid
-    //     },
-    //     message
-    //   }
-    //   await fetch(`${IG_URL}/me/messages`, {
-    //     method: 'POST',
-    //     headers: {
-    //       'Content-Type': 'application/json'
-    //     },
-    //     body: JSON.stringify(payload)
-    //   })
-    // }
+    for (const [key, jdlIgsid] of jdlIgsids.entries()) {
+      // const jwtMan = jwt.generateMan(manIds[key], 2)
+      const messages = this.getJdlMessages(element, authorization)
+
+      for (const message of messages) {
+        const payload = {
+          recipient: {
+            id: jdlIgsid
+          },
+          message
+        }
+        const res = await fetch(`${IG_URL}/me/messages`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${igToken}`
+          },
+          body: JSON.stringify(payload)
+        })
+          .then((res) => res.json())
+          .catch(() => null)
+        console.log(res)
+      }
+    }
   }
 
   async sendMessagesToMan(element: WebradioShow | Video | Article, authorization: Authorization) {
@@ -63,7 +72,9 @@ export class IgService {
             Authorization: `Bearer ${igToken}`
           },
           body: JSON.stringify(payload)
-        }).then(res => res.json()).catch(() => null)
+        })
+          .then((res) => res.json())
+          .catch(() => null)
         console.log(res)
       }
     }
@@ -96,9 +107,10 @@ export class IgService {
             elements: [
               {
                 title: element.title,
-                subtitle: 'streamId' in element
-                  ? `Émission\nDurée : ${(authorization.content as WebradioAuthorization).estimatedDuration}`
-                  : 'type' in element
+                subtitle:
+                  'streamId' in element
+                    ? `Émission\nDurée : ${(authorization.content as WebradioAuthorization).estimatedDuration}`
+                    : 'type' in element
                     ? `Vidéo\nDurée : ${(authorization.content as VideoAuthorization).duration}`
                     : 'Article',
                 image_url: `${API}/public/images/thumbnails/${element.thumbnail}`,
@@ -116,4 +128,58 @@ export class IgService {
       }
     ]
   }
+
+  private getJdlMessages(element: WebradioShow | Video | Article, authorization: Authorization): any {
+    if (typeof authorization.content === 'string') authorization.content = JSON.parse(authorization.content)
+    authorization.content = authorization.content as WebradioAuthorization | VideoAuthorization | ArticleAuthorization
+
+    return [
+      {
+        attachment: {
+          type: 'template',
+          payload: {
+            template_type: 'generic',
+            elements: [
+              {
+                title: `Demande de publication ${authorization.status === 2 ? 'acceptée' : 'refusée'}`,
+                subtitle: 'Message automatique'
+              }
+            ]
+          }
+        }
+      },
+      {
+        attachment: {
+          type: 'template',
+          payload: {
+            template_type: 'generic',
+            elements: [
+              {
+                title: element.title,
+                subtitle:
+                  'streamId' in element
+                    ? `Émission\nPublication ${authorization.status === 2 ? 'autorisée' : 'refusée'} par ${authorization.manager}.`
+                    : 'type' in element
+                    ? `Vidéo\nPublication ${authorization.status === 2 ? 'autorisée' : 'refusée'} par ${authorization.manager}.`
+                    : `Article\nPublication ${authorization.status === 2 ? 'autorisée' : 'refusée'} par ${authorization.manager}.`,
+                image_url: `${API}/public/images/thumbnails/${element.thumbnail}`,
+                buttons: [
+                  {
+                    type: 'web_url',
+                    url: `${CLIENT}/admin`,
+                    title: 'Espace admin'
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
 }
+
+
+
+
+
