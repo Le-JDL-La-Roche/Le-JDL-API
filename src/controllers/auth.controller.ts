@@ -8,6 +8,7 @@ import { IncomingHttpHeaders } from 'http'
 import { DefaultSuccess } from '$responses/success/default-success.response'
 import jwt from '$utils/jwt'
 import nexter from '$utils/nexter'
+import { DefaultServiceResponse } from '$models/responses/services/default-service-response.model'
 
 export default class Auth {
   async auth(headers: IncomingHttpHeaders): Promise<DataSuccess<{ jwt: string }>> {
@@ -18,6 +19,20 @@ export default class Auth {
     }
 
     return new DataSuccess(200, SUCCESS, 'Success', { jwt: jwt.generate() })
+  }
+
+  async authMan(headers: IncomingHttpHeaders): Promise<DataSuccess<{ jwt: string }>> {
+    let auth = await new AuthService().checkManAuth(headers['authorization'] + '')
+
+    try {
+      nexter.serviceToException(auth)
+    } catch (error) {
+      throw error as ControllerException
+    }
+
+    let resJwt = headers['authorization']?.includes('Bearer') ? headers['authorization'].split(' ')[1] : jwt.generateMan(auth.data!, 14)
+
+    return new DataSuccess(200, SUCCESS, 'Success', { jwt: jwt.generateMan(auth.data!, 14) })
   }
 
   async verify(headers: IncomingHttpHeaders): Promise<DataSuccess<{ jwt: string }>> {
@@ -50,3 +65,4 @@ export default class Auth {
     return new DefaultSuccess()
   }
 }
+

@@ -1,33 +1,49 @@
+import { Article } from "$models/features/article.model"
+import { Video } from "$models/features/video.model"
+import { WebradioShow } from "$models/features/webradio-show.model"
+
 export interface Authorization {
   id?: number
   elementType: 'show' | 'video' | 'article'
   elementId: number
   content: WebradioAuthorization | VideoAuthorization | ArticleAuthorization | string
+  submitDate?: string
+  /**
+   * `-2` Draft
+   *
+   * `-1` Waiting for authorization
+   *
+   * ` 1` Refused
+   *
+   * ` 2` Accepted
+   */
+  status: -2 | -1 | 1 | 2
+  manager?: string
+  comments?: string
+  responseDate?: string
+  signature?: string
 }
 
 export interface WebradioAuthorization {
-  title: string
   subject: string
   date: string
   estimatedDuration: string
   inGuests: Guest[]
   outGuests: Guest[]
   synopsis: string
+  link: string
 }
 
 export interface VideoAuthorization {
-  title: string
   subject: string
-  medium: string
-  author: string
-  duration: number
+  duration: string
   inGuests: Guest[]
   outGuests: Guest[]
   synopsis: string
+  link: string
 }
 
 export interface ArticleAuthorization {
-  title: string
   subject: string
   author: string
   synopsis: string
@@ -44,3 +60,4 @@ export interface Guest {
   use: 'diffusés en direct et publiés après montage' | string
   media: 'le site Web, le compte Instagram, la chaîne YouTube, les plateformes de streaming' | string
 }
+

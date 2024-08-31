@@ -18,12 +18,11 @@ export class AuthService {
     if (auth.startsWith('Basic')) {
       const [name, password] = Buffer.from(auth.split(' ')[1], 'base64').toString('ascii').split(':')
 
-      if (name == process.env['ADMIN_USERNAME'] && password == process.env['ADMIN_PASSWORD'])
-        return { status: true, code: SUCCESS }
+      if (name == process.env['ADMIN_USERNAME'] && password == process.env['ADMIN_PASSWORD']) return { status: true, code: SUCCESS }
     }
 
     if (auth.startsWith('Bearer ')) {
-      const dec = await jwt.verify(auth.split(' ')[1])      
+      const dec = await jwt.verify(auth.split(' ')[1])
 
       if (!dec[0]) {
         if (dec[1] == 401) {
@@ -46,4 +45,34 @@ export class AuthService {
 
     return { status: false, code: AUTH_ERROR }
   }
+
+  async checkManAuth(auth: string): Promise<DefaultServiceResponse<string>> {
+    const manIds: string[] = JSON.parse(process.env['MAN_IDS'] + '')
+    const manPwds: string[] = JSON.parse(process.env['MAN_PWDS'] + '')
+
+    if (auth.startsWith('Bearer ')) {
+      const dec = await jwt.verify(auth.split(' ')[1], true)
+
+      if (!dec[0]) {
+        return { status: false, code: AUTH_ERROR, message: dec[2] }
+      } else if (!jwt.isJwtPayload(dec[1])) {
+        return { status: false, code: AUTH_ERROR }
+      }
+
+      const id = manIds.indexOf(dec[1].name)
+      if (id == -1) return { status: false, code: AUTH_ERROR }
+
+      return { status: true, code: SUCCESS, data: dec[1].name }
+    } else if (auth.startsWith('Basic ')) {
+      const [name, password] = Buffer.from(auth.split(' ')[1], 'base64').toString('ascii').split(':')
+
+      const id = manIds.indexOf(name)
+      if (id == -1) return { status: false, code: AUTH_ERROR }
+
+      if (password == manPwds[id]) return { status: true, code: SUCCESS, data: name }
+    }
+
+    return { status: false, code: AUTH_ERROR }
+  }
 }
+

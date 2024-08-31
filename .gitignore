@@ -12,3 +12,6 @@ vite.config.ts.timestamp-*
 
 /public/images/content/*.*
 /public/images/thumbnails/*.*
+/public/files/*.*
+/public/audio/*.*
+/public/index.html

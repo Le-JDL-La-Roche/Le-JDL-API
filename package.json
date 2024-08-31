@@ -1,6 +1,6 @@
 {
   "name": "le-jdl-api",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "author": "Paul Saillant",
   "private": true,
   "license": "GPL-3.0-or-later",
@@ -18,7 +18,7 @@
     "jsonwebtoken": "^9.0.0",
     "moment": "^2.29.4",
     "multer": "^1.4.5-lts.1",
-    "mysql2": "^2.3.3",
+    "mysql2": "^3.11.0",
     "os": "^0.1.2",
     "socket.io": "^4.6.2",
     "swagger-jsdoc": "^6.2.7",

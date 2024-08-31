@@ -8,6 +8,7 @@ import { IncomingHttpHeaders } from 'http'
 import nexter from '$utils/nexter'
 import { AuthService } from '$services/auth.service'
 import { Article } from '$models/features/article.model'
+import { RowDataPacket } from 'mysql2'
 
 export default class Articles {
   private readonly cat = ['news', 'culture', 'sport', 'science', 'tech', 'laroche']
@@ -28,7 +29,11 @@ export default class Articles {
     try {
       nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
     } catch (error: unknown) {
-      throw error as ControllerException
+      try {
+        nexter.serviceToException(await new AuthService().checkManAuth(headers['authorization'] + ''))
+      } catch (error) {
+        throw error as ControllerException
+      }
     }
 
     let articles: Article[] = []
@@ -58,7 +63,11 @@ export default class Articles {
     try {
       await db.query('UPDATE articles SET views = ? WHERE id = ?', [article.views! + 1, +articleId])
     } catch (error) {
-      throw new DBException(undefined, error)
+      try {
+        nexter.serviceToException(await new AuthService().checkManAuth(headers['authorization'] + ''))
+      } catch (error) {
+        throw error as ControllerException
+      }
     }
 
     if (article.status == -2) {
@@ -77,7 +86,11 @@ export default class Articles {
     return new DataSuccess(200, SUCCESS, 'Success', { article })
   }
 
-  async postArticle(headers: IncomingHttpHeaders, body: Article, file: Express.Multer.File | null): Promise<DataSuccess<{ articles: Article[] }>> {
+  async postArticle(
+    headers: IncomingHttpHeaders,
+    body: Article,
+    file: Express.Multer.File | null
+  ): Promise<DataSuccess<{ articles: Article[]; id: number }>> {
     try {
       nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
     } catch (error: unknown) {
@@ -88,28 +101,39 @@ export default class Articles {
       throw new RequestException('Missing parameters')
     }
 
+    if (!body.date) {
+      body.date = Math.round(Date.now() / 1000) + ''
+    }
+
+    if (!body.status) {
+      body.status = -2
+    }
+
     if (!this.cat.includes(body.category)) {
       throw new RequestException('Invalid parameters')
     }
 
-    if (+body.status != -2 && +body.status != 2) {
+    if (+body.status != -2 && +body.status != -1 && +body.status != 2) {
       throw new RequestException('Invalid parameters')
     }
 
+    let articleId: number
     try {
-      await db.query(
-        'INSERT INTO articles (title, article, thumbnail, thumbnail_src, category, author, date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [
-          body.title + '',
-          body.article + '',
-          file.filename + '',
-          body.thumbnailSrc + '',
-          body.category + '',
-          body.author + '',
-          Math.round(Date.now() / 1000),
-          +body.status
-        ]
-      )
+      articleId = (
+        await db.query<RowDataPacket>(
+          'INSERT INTO articles (title, article, thumbnail, thumbnail_src, category, author, date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+          [
+            body.title + '',
+            body.article + '',
+            file.filename + '',
+            body.thumbnailSrc + '',
+            body.category + '',
+            body.author + '',
+            body.date + '',
+            +body.status
+          ]
+        )
+      ).insertId
     } catch (error) {
       throw new DBException(undefined, error)
     }
@@ -122,7 +146,7 @@ export default class Articles {
       throw new DBException(undefined, error)
     }
 
-    return new DataSuccess(200, SUCCESS, 'Success', { articles })
+    return new DataSuccess(200, SUCCESS, 'Success', { articles, id: +articleId })
   }
 
   async putArticle(
@@ -130,7 +154,7 @@ export default class Articles {
     articleId: number,
     body: Article,
     file: Express.Multer.File | null
-  ): Promise<DataSuccess<{ articles: Article[] }>> {
+  ): Promise<DataSuccess<{ articles: Article[]; id: number }>> {
     try {
       nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
     } catch (error: unknown) {
@@ -153,7 +177,7 @@ export default class Articles {
       throw new RequestException('Invalid parameters')
     }
 
-    if (body.status != null && body.status != undefined && +body.status != -2 && +body.status != 2) {
+    if (body.status != null && body.status != undefined && +body.status != -2 && +body.status != -1 && +body.status != 2) {
       throw new RequestException('Invalid parameters')
     }
 
@@ -164,7 +188,7 @@ export default class Articles {
       thumbnailSrc: body.thumbnailSrc ? body.thumbnailSrc + '' : article.thumbnailSrc,
       category: body.category ? body.category : article.category,
       author: body.author ? body.author + '' : article.author,
-      date: +article.status === -2 && +body.status === 2 ? Math.round(Date.now() / 1000) + '' : article.date,
+      date: body.date ? body.date + '' : article.date,
       status: body.status ? body.status : article.status
     }
 
@@ -195,7 +219,7 @@ export default class Articles {
       throw new DBException(undefined, error)
     }
 
-    return new DataSuccess(200, SUCCESS, 'Success', { articles })
+    return new DataSuccess(200, SUCCESS, 'Success', { articles, id: +articleId })
   }
 
   async deleteArticle(headers: IncomingHttpHeaders, articleId: number): Promise<DataSuccess<{ articles: Article[] }>> {
@@ -223,6 +247,12 @@ export default class Articles {
       throw new DBException(undefined, error)
     }
 
+    try {
+      await db.query("DELETE FROM authorizations WHERE element_type = 'article' AND element_id = ?", +articleId)
+    } catch (error) {
+      throw new DBException(undefined, error)
+    }
+
     let articles: Article[] = []
 
     try {
@@ -234,3 +264,4 @@ export default class Articles {
     return new DataSuccess(200, SUCCESS, 'Success', { articles })
   }
 }
+

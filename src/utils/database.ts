@@ -33,7 +33,7 @@ class DataBase {
     }
   }
 
-  private keysToCamel(o: any) {
+  private keysToCamel(o: any): any {
     if (this.isObject(o)) {
       const n: any = {}
 
