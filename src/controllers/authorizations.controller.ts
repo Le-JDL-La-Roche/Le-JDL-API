@@ -11,6 +11,7 @@ import { WebradioShow } from '$models/features/webradio-show.model'
 import { Video } from '$models/features/video.model'
 import { Article } from '$models/features/article.model'
 import crypto from 'crypto'
+import { IgService } from '$services/ig.service'
 
 export default class Authorizations {
   async getAuthorizations(headers: IncomingHttpHeaders): Promise<DataSuccess<{ authorizations: Authorization[] }>> {
@@ -27,7 +28,7 @@ export default class Authorizations {
     let authorizations: Authorization[] = []
 
     try {
-      authorizations = await db.query<Authorization[]>('SELECT * FROM authorizations ORDER BY submit_date DESC')
+      authorizations = await db.query<Authorization[]>('SELECT * FROM authorizations ORDER BY submit_date DESC, id DESC')
     } catch (error) {
       throw new DBException(undefined, error)
     }
@@ -82,7 +83,7 @@ export default class Authorizations {
     let elementId: number
 
     try {
-      elementId = await this.checkElement(body)
+      elementId = (await this.checkElement(body)).id!
     } catch (error) {
       throw error
     }
@@ -124,7 +125,7 @@ export default class Authorizations {
     let authorizations: Authorization[] = []
 
     try {
-      authorizations = await db.query<Authorization[]>('SELECT * FROM authorizations ORDER BY submit_date DESC')
+      authorizations = await db.query<Authorization[]>('SELECT * FROM authorizations ORDER BY submit_date DESC, id DESC')
     } catch (error) {
       throw new DBException(undefined, error)
     }
@@ -140,6 +141,7 @@ export default class Authorizations {
     const jdlAuth = await new AuthService().checkAuth(headers['authorization'] + '')
     const manAuth = await new AuthService().checkManAuth(headers['authorization'] + '')
 
+    
     if (jdlAuth.status) return await this.putJdlAuthorization(headers, authorizationId, body)
     if (manAuth.status) return await this.putManAuthorization(headers, authorizationId, body, manAuth.data + '')
 
@@ -162,20 +164,22 @@ export default class Authorizations {
     if (!authorization || !authorization.id) {
       throw new RequestException('Authorization not found')
     }
-
+    
     if (authorization.status !== -2) {
       if (authorization.status === 1) {
         return this.postAuthorization(headers, body)
       }
       throw new RequestException('Authorization already submitted')
     }
-
+    
     if (body.elementType && body.elementType !== 'show' && body.elementType !== 'video' && body.elementType !== 'article') {
       throw new RequestException('Invalid parameters')
     }
-
+    
+    let element: WebradioShow | Video | Article
+    
     try {
-      await this.checkElement(body)
+      element = await this.checkElement(authorization)
     } catch (error) {
       throw error
     }
@@ -201,14 +205,13 @@ export default class Authorizations {
     }
 
     if (authorization.status === -1) {
-      console.debug('Send Instagram message to managers')
-      // Send Instagram message to managers
+      await new IgService().sendMessagesToMan(element, {...authorization, id: authorizationId})
     }
 
     let authorizations: Authorization[] = []
 
     try {
-      authorizations = await db.query<Authorization[]>('SELECT * FROM authorizations')
+      authorizations = await db.query<Authorization[]>('SELECT * FROM authorizations ORDER BY submit_date DESC, id DESC')
     } catch (error) {
       throw new DBException(undefined, error)
     }
@@ -222,7 +225,7 @@ export default class Authorizations {
     body: Authorization,
     manId: string
   ): Promise<DataSuccess<{ authorizations: Authorization[] }>> {
-    const sigPrivateKey: string = (process.env['SIG_PRIVATE_KEYS'] + '').replaceAll('\\n', '\n')
+    const sigPrivateKey: string = (process.env['SIG_PRIVATE_KEY'] + '').replaceAll('\\n', '\n')
     const currentDate = new Date().toLocaleDateString('fr-FR')
 
     let authorization: Authorization
@@ -248,37 +251,39 @@ export default class Authorizations {
       throw new RequestException('Invalid parameters')
     }
 
+    let element: WebradioShow | Video | Article
+    
+    try {
+      element = await this.checkElement(authorization)
+    } catch (error) {
+      throw error
+    }
+
     let signature: string
 
-    if (body.status === 2) {
+    if (+body.status === 2) {
       signature = crypto
         .privateEncrypt(
           { key: sigPrivateKey, padding: crypto.constants.RSA_PKCS1_PADDING },
           Buffer.from(`Autorisation de publication accordée par ${name} le ${currentDate}.`)
         )
         .toString('base64')
-
-      console.debug('Send Instagram message to JDL')
-      // Send Instagram message to JDL
-    } else if (body.status === 1) {
+    } else if (+body.status === 1) {
       signature = crypto
         .privateEncrypt(
           { key: sigPrivateKey, padding: crypto.constants.RSA_PKCS1_PADDING },
           Buffer.from(`Autorisation de publication refusée par ${name} le ${currentDate}.`)
         )
         .toString('base64')
-
-      console.debug('Send Instagram message to JDL')
-      // Send Instagram message to JDL
     } else {
       throw new RequestException('Invalid parameters')
     }
 
     try {
       await db.query('UPDATE authorizations SET status = ?, manager = ?, comments = ?, response_date = ?, signature = ? WHERE id = ?', [
-        body.status,
+        +body.status,
         name,
-        body.comments ? body.comments : '',
+        body.comments ? body.comments : 'Non spécifié',
         Math.floor(Date.now() / 1000),
         signature,
         authorizationId
@@ -287,10 +292,14 @@ export default class Authorizations {
       throw new DBException(undefined, error)
     }
 
+    if (+body.status > 0) {
+      new IgService().sendMessagesToJdl(element, {...authorization, status: body.status, id: authorizationId})
+    }
+
     let authorizations: Authorization[] = []
 
     try {
-      authorizations = await db.query<Authorization[]>('SELECT * FROM authorizations')
+      authorizations = await db.query<Authorization[]>('SELECT * FROM authorizations ORDER BY submit_date DESC, id DESC')
     } catch (error) {
       throw new DBException(undefined, error)
     }
@@ -334,7 +343,7 @@ export default class Authorizations {
     return new DataSuccess(200, SUCCESS, 'Success', { authorizations })
   }
 
-  private async checkElement(body: Authorization): Promise<number> {
+  private async checkElement(body: Authorization): Promise<WebradioShow | Video | Article> {
     if (body.elementType === 'show') {
       let show: WebradioShow
 
@@ -356,7 +365,7 @@ export default class Authorizations {
         throw new RequestException('Show not found')
       }
 
-      return show.id
+      return show
     } else if (body.elementType === 'video') {
       let video: Video
 
@@ -378,7 +387,7 @@ export default class Authorizations {
         throw new RequestException('Video not found')
       }
 
-      return video.id
+      return video
     } else if (body.elementType === 'article') {
       let article: Article
 
@@ -400,10 +409,10 @@ export default class Authorizations {
         throw new RequestException('Article not found')
       }
 
-      return article.id
+      return article
     }
 
-    return 0
+    throw new RequestException('Invalid parameters')
   }
 }
 

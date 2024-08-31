@@ -56,7 +56,6 @@ export default class Webradio {
       nexter.serviceToException(await new AuthService().checkAuth(headers['authorization'] + '', 'Bearer'))
     } catch (error: unknown) {
       try {
-        console.log(headers.authorization)
         nexter.serviceToException(await new AuthService().checkManAuth(headers['authorization'] + ''))
       } catch (error) {
         throw error as ControllerException
@@ -117,7 +116,7 @@ export default class Webradio {
       throw error as ControllerException
     }
 
-    if (!body.title || !body.description || !file || !body.streamId || !body.status || !body.prompter) {
+    if (!body.title || !body.description || !file || !body.status || !body.prompter) {
       throw new RequestException('Missing parameters')
     }
 
@@ -140,6 +139,10 @@ export default class Webradio {
       +body.status != 2
     ) {
       throw new RequestException('Invalid parameters')
+    }
+
+    if (body.status == 2 && !body.streamId) {
+      throw new RequestException('Missing parameters')
     }
 
     // let liveShow: WebradioShow
@@ -251,6 +254,10 @@ export default class Webradio {
       date: body.date ? body.date + '' : webradioShow.date,
       status: body.status ? body.status : webradioShow.status,
       prompter: body.prompter ? body.prompter + '' : webradioShow.prompter
+    }
+
+    if (webradioShow.status == 2 && !webradioShow.streamId) {
+      throw new RequestException('Missing parameters')
     }
 
     try {

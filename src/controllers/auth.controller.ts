@@ -30,7 +30,9 @@ export default class Auth {
       throw error as ControllerException
     }
 
-    return new DataSuccess(200, SUCCESS, 'Success', { jwt: jwt.generate(auth.data, 14) })
+    let resJwt = headers['authorization']?.includes('Bearer') ? headers['authorization'].split(' ')[1] : jwt.generateMan(auth.data!, 14)
+
+    return new DataSuccess(200, SUCCESS, 'Success', { jwt: jwt.generateMan(auth.data!, 14) })
   }
 
   async verify(headers: IncomingHttpHeaders): Promise<DataSuccess<{ jwt: string }>> {

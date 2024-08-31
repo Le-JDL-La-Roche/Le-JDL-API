@@ -10,9 +10,5 @@ export default class Ig {
     }
     return body['hub.challenge']
   }
-
-  async postWebhook(body: any) {
-    console.log(body.entry[0].messaging)
-  }
 }
 

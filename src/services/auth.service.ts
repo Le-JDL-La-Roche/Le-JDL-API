@@ -51,7 +51,7 @@ export class AuthService {
     const manPwds: string[] = JSON.parse(process.env['MAN_PWDS'] + '')
 
     if (auth.startsWith('Bearer ')) {
-      const dec = await jwt.verify(auth.split(' ')[1])
+      const dec = await jwt.verify(auth.split(' ')[1], true)
 
       if (!dec[0]) {
         return { status: false, code: AUTH_ERROR, message: dec[2] }

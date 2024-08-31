@@ -33,7 +33,19 @@ class JWT {
     return [true, decoded]
   }
 
-  generate(username = process.env['ADMIN_USERNAME']!, expDays = 30): string {
+  generate(): string {
+    const secretKey = process.env['JWT_SECRET_KEY'] + ''
+
+    return jwt.sign(
+      {
+        name: process.env['ADMIN_USERNAME'],
+      },
+      secretKey,
+      { subject: 0 + '', expiresIn: `30 days` }
+    )
+  }
+
+  generateMan(username: string, expDays: number) {
     const secretKey = process.env['JWT_SECRET_KEY'] + ''
 
     return jwt.sign(
@@ -41,7 +53,7 @@ class JWT {
         name: username,
       },
       secretKey,
-      { subject: 0 + '', expiresIn: `${expDays} days` }
+      { subject: 1 + '', expiresIn: `${expDays} days` }
     )
   }
 

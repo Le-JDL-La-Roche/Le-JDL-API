@@ -86,7 +86,7 @@ export default class Videos {
       throw error as ControllerException
     }
 
-    if (!body.title || !body.description || !file || !body.type || !body.videoId || !body.category || !body.author || !body.status) {
+    if (!body.title || !body.description || !file || !body.type || !body.category || !body.author || !body.status) {
       throw new RequestException('Missing parameters')
     }
 
@@ -104,6 +104,10 @@ export default class Videos {
 
     if (+body.status != -2 && +body.status != -1 && +body.status != 2) {
       throw new RequestException('Invalid parameters')
+    }
+
+    if (body.status == 2 && !body.videoId) {
+      throw new RequestException('Missing parameters')
     }
 
     let videoId: number
@@ -184,6 +188,10 @@ export default class Videos {
       author: body.author ? body.author + '' : video.author,
       date: body.date ? body.date + '' : video.date,
       status: body.status ? body.status : video.status
+    }
+
+    if (video.status == 2 && !video.videoId) {
+      throw new RequestException('Missing parameters')
     }
 
     try {
