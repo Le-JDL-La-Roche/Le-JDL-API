@@ -25,14 +25,6 @@ export default class IgRouter implements Route {
         next(error)
       }
     })
-    this.router.post(`${this.path}/webhooks`, async (req, res, next) => {
-      try {
-        const resp = new Ig().postWebhook(req.body)
-        res.status(200).send()
-      } catch (error) {
-        next(error)
-      }
-    })
   }
 }
 
