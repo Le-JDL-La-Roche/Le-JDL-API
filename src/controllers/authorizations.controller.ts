@@ -80,10 +80,10 @@ export default class Authorizations {
 
     body.status = body.status && +body.status == -1 ? -1 : -2
 
-    let elementId: number
+    let element: WebradioShow | Video | Article
 
     try {
-      elementId = (await this.checkElement(body)).id!
+      element = await this.checkElement(body)
     } catch (error) {
       throw error
     }
@@ -94,7 +94,7 @@ export default class Authorizations {
       authorization = (
         await db.query<count[]>('SELECT COUNT(*) AS count FROM authorizations WHERE element_type = ? AND element_id = ? AND status < 0', [
           body.elementType,
-          elementId
+          element.id
         ])
       )[0]
     } catch (error) {
@@ -118,8 +118,7 @@ export default class Authorizations {
     }
 
     if (body.status === -1) {
-      console.debug('Send Instagram message to managers')
-      // Send Instagram message to managers
+      await new IgService().sendMessagesToMan(element, body)
     }
 
     let authorizations: Authorization[] = []
@@ -141,7 +140,6 @@ export default class Authorizations {
     const jdlAuth = await new AuthService().checkAuth(headers['authorization'] + '')
     const manAuth = await new AuthService().checkManAuth(headers['authorization'] + '')
 
-    
     if (jdlAuth.status) return await this.putJdlAuthorization(headers, authorizationId, body)
     if (manAuth.status) return await this.putManAuthorization(headers, authorizationId, body, manAuth.data + '')
 
@@ -164,20 +162,20 @@ export default class Authorizations {
     if (!authorization || !authorization.id) {
       throw new RequestException('Authorization not found')
     }
-    
+
     if (authorization.status !== -2) {
       if (authorization.status === 1) {
         return this.postAuthorization(headers, body)
       }
       throw new RequestException('Authorization already submitted')
     }
-    
+
     if (body.elementType && body.elementType !== 'show' && body.elementType !== 'video' && body.elementType !== 'article') {
       throw new RequestException('Invalid parameters')
     }
-    
+
     let element: WebradioShow | Video | Article
-    
+
     try {
       element = await this.checkElement(authorization)
     } catch (error) {
@@ -205,7 +203,7 @@ export default class Authorizations {
     }
 
     if (authorization.status === -1) {
-      await new IgService().sendMessagesToMan(element, {...authorization, id: authorizationId})
+      await new IgService().sendMessagesToMan(element, { ...authorization, id: authorizationId })
     }
 
     let authorizations: Authorization[] = []
@@ -252,7 +250,7 @@ export default class Authorizations {
     }
 
     let element: WebradioShow | Video | Article
-    
+
     try {
       element = await this.checkElement(authorization)
     } catch (error) {
@@ -265,14 +263,22 @@ export default class Authorizations {
       signature = crypto
         .privateEncrypt(
           { key: sigPrivateKey, padding: crypto.constants.RSA_PKCS1_PADDING },
-          Buffer.from(`Autorisation de publication accordée par ${name} le ${currentDate}.`)
+          Buffer.from(
+            `Autorisation de publication de ${
+              authorization.elementType === 'show' ? "l'émission" : authorization.elementType === 'video' ? 'la vidéo' : "l'article"
+            } "${element.title}" accordée par ${name} le ${currentDate}.`
+          )
         )
         .toString('base64')
     } else if (+body.status === 1) {
       signature = crypto
         .privateEncrypt(
           { key: sigPrivateKey, padding: crypto.constants.RSA_PKCS1_PADDING },
-          Buffer.from(`Autorisation de publication refusée par ${name} le ${currentDate}.`)
+          Buffer.from(
+            `Autorisation de publication de ${
+              authorization.elementType === 'show' ? "l'émission" : authorization.elementType === 'video' ? 'la vidéo' : "l'article"
+            } "${element.title}" refusée par ${name} le ${currentDate}.`
+          )
         )
         .toString('base64')
     } else {
@@ -422,5 +428,4 @@ export default class Authorizations {
     throw new RequestException('Invalid parameters')
   }
 }
-
 
