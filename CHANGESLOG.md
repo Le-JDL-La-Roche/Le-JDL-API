@@ -1,5 +1,8 @@
 # Mises à jour de l'API
 
+### 26 janvier 2025 `v2.5.0`
+- Nouvelles rubriques
+
 ### 1<sup>er</sup> septembre 2024 `v2.4.0`
 - Fonctions administrateur & encadrants (signatures numériques)
 

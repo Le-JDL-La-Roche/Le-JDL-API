@@ -11,7 +11,7 @@ import { WebradioShow } from '$models/features/webradio-show.model'
 import { Video } from '$models/features/video.model'
 import { Article } from '$models/features/article.model'
 import crypto from 'crypto'
-import { IgService } from '$services/ig.service'
+import { MailService } from '$services/mail.service'
 
 export default class Authorizations {
   async getAuthorizations(headers: IncomingHttpHeaders): Promise<DataSuccess<{ authorizations: Authorization[] }>> {
@@ -118,7 +118,7 @@ export default class Authorizations {
     }
 
     if (body.status === -1) {
-      await new IgService().sendMessagesToMan(element, body)
+      await new MailService().sendMessagesToMan(element, body)
     }
 
     let authorizations: Authorization[] = []
@@ -203,7 +203,7 @@ export default class Authorizations {
     }
 
     if (authorization.status === -1) {
-      await new IgService().sendMessagesToMan(element, { ...authorization, id: authorizationId })
+      await new MailService().sendMessagesToMan(element, { ...authorization, id: authorizationId })
     }
 
     let authorizations: Authorization[] = []
@@ -299,7 +299,7 @@ export default class Authorizations {
     }
 
     if (+body.status > 0) {
-      new IgService().sendMessagesToJdl(element, {
+      new MailService().sendMessagesToJdl(element, {
         ...authorization,
         status: +body.status as 1 | 2,
         manager: name,

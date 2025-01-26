@@ -11,7 +11,8 @@ import { AuthService } from '$services/auth.service'
 import { RowDataPacket } from 'mysql2'
 
 export default class Videos {
-  private readonly cat = ['news', 'culture', 'sport', 'science', 'tech', 'laroche']
+  // private readonly cat = ['news', 'culture', 'sport', 'science', 'tech', 'laroche']
+  private readonly cat = ['france', 'international', 'culture', 'sport', 'science', 'laroche']
 
   async getPublishedVideos(): Promise<DataSuccess<{ videos: Video[] }>> {
     let videos: Video[] = []

@@ -11,7 +11,7 @@ import { Article } from '$models/features/article.model'
 import { RowDataPacket } from 'mysql2'
 
 export default class Articles {
-  private readonly cat = ['news', 'culture', 'sport', 'science', 'tech', 'laroche']
+  private readonly cat = ['france', 'international', 'culture', 'sport', 'science', 'laroche']
 
   async getPublishedArticles(): Promise<DataSuccess<{ articles: Article[] }>> {
     let articles: Article[] = []

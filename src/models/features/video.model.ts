@@ -5,8 +5,9 @@ export interface Video {
   thumbnail: string
   videoId: string
   type: 'youtube' | 'instagram' | ''
-  category: 'news' | 'culture' | 'sport' | 'science' | 'tech' | 'laroche' | ''
+  category: 'france' | 'international' | 'culture' | 'sport' | 'science' | 'laroche' | ''
   author: string
   date: string
   status: -2 | 2
 }
+

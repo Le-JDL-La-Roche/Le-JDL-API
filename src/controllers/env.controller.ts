@@ -22,10 +22,12 @@ export default class Env {
     let shows: Shows = { total: 0, status: { draft: 0, live: 0, waiting: 0, podcast: 0 } }
     let videos: Videos = {
       total: 0,
-      category: { news: 0, culture: 0, sport: 0, science: 0, tech: 0, laroche: 0 },
+      // category: { news: 0, culture: 0, sport: 0, science: 0, tech: 0, laroche: 0 },
+      category: { france: 0, international: 0, culture: 0, sport: 0, science: 0, laroche: 0 },
       type: { youtube: 0, instagram: 0 }
     }
-    let articles: Articles = { total: 0, category: { news: 0, culture: 0, sport: 0, science: 0, tech: 0, laroche: 0 } }
+    // let articles: Articles = { total: 0, category: { news: 0, culture: 0, sport: 0, science: 0, tech: 0, laroche: 0 } }
+    let articles: Articles = { total: 0, category: { france: 0, international: 0, culture: 0, sport: 0, science: 0, laroche: 0 } }
 
     try {
       visits.visits = await db.query('SELECT * FROM visits ORDER BY timestamp DESC')
@@ -35,20 +37,20 @@ export default class Env {
       shows.status.waiting = (await db.query<count[]>('SELECT COUNT(*) AS count FROM webradio_shows WHERE status = 1'))[0].count
       shows.status.podcast = (await db.query<count[]>('SELECT COUNT(*) AS count FROM webradio_shows WHERE status = 2'))[0].count
 
-      videos.category.news = (await db.query<count[]>("SELECT COUNT(*) AS count FROM videos WHERE category = 'news'"))[0].count
+      videos.category.france = (await db.query<count[]>("SELECT COUNT(*) AS count FROM videos WHERE category = 'france'"))[0].count
+      videos.category.international = (await db.query<count[]>("SELECT COUNT(*) AS count FROM videos WHERE category = 'international'"))[0].count
       videos.category.culture = (await db.query<count[]>("SELECT COUNT(*) AS count FROM videos WHERE category = 'culture'"))[0].count
       videos.category.sport = (await db.query<count[]>("SELECT COUNT(*) AS count FROM videos WHERE category = 'sport'"))[0].count
       videos.category.science = (await db.query<count[]>("SELECT COUNT(*) AS count FROM videos WHERE category = 'science'"))[0].count
-      videos.category.tech = (await db.query<count[]>("SELECT COUNT(*) AS count FROM videos WHERE category = 'tech'"))[0].count
       videos.category.laroche = (await db.query<count[]>("SELECT COUNT(*) AS count FROM videos WHERE category = 'laroche'"))[0].count
       videos.type.youtube = (await db.query<count[]>("SELECT COUNT(*) AS count FROM videos WHERE type = 'youtube'"))[0].count
       videos.type.instagram = (await db.query<count[]>("SELECT COUNT(*) AS count FROM videos WHERE type = 'instagram'"))[0].count
 
-      articles.category.news = (await db.query<count[]>("SELECT COUNT(*) AS count FROM articles WHERE category = 'news'"))[0].count
+      articles.category.france = (await db.query<count[]>("SELECT COUNT(*) AS count FROM articles WHERE category = 'france'"))[0].count
+      articles.category.international = (await db.query<count[]>("SELECT COUNT(*) AS count FROM articles WHERE category = 'international'"))[0].count
       articles.category.culture = (await db.query<count[]>("SELECT COUNT(*) AS count FROM articles WHERE category = 'culture'"))[0].count
       articles.category.sport = (await db.query<count[]>("SELECT COUNT(*) AS count FROM articles WHERE category = 'sport'"))[0].count
       articles.category.science = (await db.query<count[]>("SELECT COUNT(*) AS count FROM articles WHERE category = 'science'"))[0].count
-      articles.category.tech = (await db.query<count[]>("SELECT COUNT(*) AS count FROM articles WHERE category = 'tech'"))[0].count
       articles.category.laroche = (await db.query<count[]>("SELECT COUNT(*) AS count FROM articles WHERE category = 'laroche'"))[0].count
     } catch (error) {
       throw new DBException()
@@ -76,11 +78,11 @@ export default class Env {
     shows.total = shows.status.draft + shows.status.live + shows.status.waiting + shows.status.podcast
     videos.total = videos.type.youtube + videos.type.instagram
     articles.total =
-      articles.category.news +
+      articles.category.france +
+      articles.category.international +
       articles.category.culture +
       articles.category.sport +
       articles.category.science +
-      articles.category.tech +
       articles.category.laroche
 
     return new DataSuccess(200, SUCCESS, 'Success', { visits, shows, videos, articles })
@@ -316,11 +318,11 @@ interface Shows {
 interface Videos {
   total: number
   category: {
-    news: number
+    france: number
+    international: number
     culture: number
     sport: number
     science: number
-    tech: number
     laroche: number
   }
   type: {
@@ -332,11 +334,11 @@ interface Videos {
 interface Articles {
   total: number
   category: {
-    news: number
+    france: number
+    international: number
     culture: number
     sport: number
     science: number
-    tech: number
     laroche: number
   }
 }

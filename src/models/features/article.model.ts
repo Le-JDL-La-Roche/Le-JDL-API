@@ -4,9 +4,10 @@ export interface Article {
   article: string
   thumbnail: string
   thumbnailSrc: string
-  category: 'news' | 'culture' | 'sport' | 'sciences' | 'tech' | 'laroche' | ''
+  category: 'france' | 'international' | 'culture' | 'sport' | 'science' | 'laroche' | ''
   author: string
   date: string
   views?: number
   status: -2 | 2
 }
+
